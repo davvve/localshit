@@ -23,12 +23,12 @@ As soon as a server makes a change to its database, this change must be communic
 We implement two concepts of a fault-tolerant system. First, we have redundancy in servers, second, we have data replication over all servers. With the usage of the ring topology and data replication, every backend server has the same knowledge, so the data is crash resistant. In case of a backend server crash, the other backend servers will inform each other and try to choose a new leader, if necessary. With these concepts we have a masking fault tolerance, that means that failures are tolerated and handled from the system and are not visible for the user. Data integrity is provided with a quorum-based data replication. With a checksum we can verify that a message is consistent.
 
 ## Having an explicit architectural model
-1.	Client requests web page www.site.org
-2.	DNS gateway server responds with the IP of the first available backend server.
-3.	Client requests page from backend server. It also connects with a socket of the backend server
-4.	Backend servers replicates with all other backend servers. The elected leader notifies the proxy server.
+1.	Client has stored website as an app locally
+2. Client requests connection to backend server via anycast address. The leader server will answer to the client.
+3. Backend servers replicates with all other backend servers.
+
 
 
  
-![architecture_v1_4.png](architecture_v1_4.png)
+![architecture_v1_5.png](architecture_v1_5.png)
 Illustration 1: Architecture model
