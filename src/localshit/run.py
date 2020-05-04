@@ -2,21 +2,19 @@
 Main class for starting a server instance.
 
 """
-import socket
-import os
 import sys
 import time
 import logging
 import traceback
 
+sys.path.insert(0, "..")
+from service_discovery import ServiceDiscovery
+from service_announcement import ServiceAnnouncement
+
+
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
 )
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(dir_path)
-from service_discovery import ServiceDiscovery
-from service_announcement import ServiceAnnouncement
 
 
 class LocalsHitManager:
@@ -24,18 +22,23 @@ class LocalsHitManager:
         self.threads = []
         self.running = True
         logging.info("manager started!")
+
         discovery_thread = ServiceDiscovery(10001)
         self.threads.append(discovery_thread)
 
+        announcement_thread = ServiceAnnouncement(10001)
+        self.threads.append(announcement_thread)
+
         try:
-            discovery_thread.start()
+            for th in self.threads:
+                th.start()
 
             logging.info("discovery_thread started")
 
             while self.running:
                 for th in self.threads:
                     if not th.is_alive():
-                        logging.info("Thread %s died." % th.__class__.__name)
+                        logging.info("Thread %s died." % th.__class__.__name__)
                         self.running = False
                         break
 
@@ -54,6 +57,7 @@ class LocalsHitManager:
                 logging.info("Joining thread %s." % th.__class__.__name__)
                 th.join()
             logging.info("discovery_thread stopped")
+
 
 if __name__ == "__main__":
     try:

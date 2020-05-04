@@ -7,7 +7,6 @@ Adapted from https://stackoverflow.com/questions/21089268/python-service-discove
 from socket import socket, AF_INET, SOCK_DGRAM
 from select import select
 from stop import StoppableThread
-import time
 import logging
 
 logging.basicConfig(
