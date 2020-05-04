@@ -30,4 +30,4 @@ class ServiceDiscovery(StoppableThread):
 
             data, addr = socket_data.recvfrom(1024)  # wait for a packet
             if data:
-                logging.info("got service announcement from %s" % data.decode())
+                logging.info("got service announcement from %s:%s with id %s" % (addr[0], addr[1], data.decode()))
