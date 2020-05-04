@@ -2,7 +2,7 @@ import socket
 
 socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-server_address = '127.0.0.1'
+server_address = "127.0.0.1"
 port = 10001
 buffer_size = 1024
 
