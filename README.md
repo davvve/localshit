@@ -13,3 +13,9 @@ Project of Lecture DBE14 Distributed Systems
 ## Install
 
 ## Usage
+
+Run application:
+
+```
+python src/localshit/run.py 
+```
