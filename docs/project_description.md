@@ -2,9 +2,13 @@
 
 ### Group 16: David Lüttmann, Frederick Dehner, Markus Drespling
 
+## Problem Statement: 
+
 ## Project description:  
 Our project is a mobile social media platform, where the user can anonymously share quotes with people. It is best described with “a snapchat for short quotes (like twitter)”. Each uploaded content is initially visible within a certain time period. Our goal is that all users, despite the distance, are close to funny events, interesting finds or other occurrences. Therefore, we need a proxy server which communicates with the clients and displays the content. With serveral backend servers we provide the shared content on our frontend and replicate shared quotes. 
 In a further step we can think about uploading images instead of text or a vicinity-based service, so that the content is only visible for users in a limited area of approximately 10 kilometers around the person who uploaded the content. But for this we will focus on the technical topics of this lecture. Because these two ideas have a high amount of client-based technology like GUI programming or location-based services. 
+
+# Requirement Analysis 
 
 ## Dynamic discovery of hosts
 Every backend-server sends a service beacon at least every t=5 seconds over a UDP Datagram multicast (e.g. port 1200). The SSDP (Simple Service Discovery Protocol) is suitable for this. Every server holds a list of the other servers. 
