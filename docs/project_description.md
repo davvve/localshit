@@ -1,6 +1,6 @@
 # Local's Hit
 
-### Group 10: David Lüttmann, Frederick Dehner, Markus Drespling
+### Group 16: David Lüttmann, Frederick Dehner, Markus Drespling
 
 ## Project description:  
 Our project is a mobile social media platform, where the user can anonymously share quotes with people. It is best described with “a snapchat for short quotes (like twitter)”. Each uploaded content is initially visible within a certain time period. Our goal is that all users, despite the distance, are close to funny events, interesting finds or other occurrences. Therefore, we need a proxy server which communicates with the clients and displays the content. With serveral backend servers we provide the shared content on our frontend and replicate shared quotes. 
