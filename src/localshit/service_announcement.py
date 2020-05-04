@@ -6,25 +6,29 @@ Adapted from https://stackoverflow.com/questions/21089268/python-service-discove
 
 from time import sleep
 from socket import *
+from stop import StoppableThread
+
 import uuid
 import threading
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
+)
 
 
-class ServiceAnnouncement(threading.Thread):
+class ServiceAnnouncement(StoppableThread):
     def __init__(self, port, *args, **kwargs):
         super(ServiceAnnouncement, self).__init__(*args, **kwargs)
-        s = socket(AF_INET, SOCK_DGRAM)  # create UDP socket
-        s.bind(("", 0))
-        s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)  # this is a broadcast socket
-        server_id = str(uuid.uuid4())
+        self.udp_socket = socket(AF_INET, SOCK_DGRAM)  # create UDP socket
+        self.udp_socket.bind(("", 0))
+        self.udp_socket.setsockopt(
+            SOL_SOCKET, SO_BROADCAST, 1
+        )  # this is a broadcast socket
+        self.server_id = str(uuid.uuid4())
 
-        while True:
-            data = server_id
-            s.sendto(data.encode(), ("<broadcast>", port))
-            print("sent service announcement")
-            sleep(5)
-
-
-if __name__ == "__main__":
-    print("service announcement...")
-    app = ServiceAnnouncement(5000)
+    def work_func(self):
+        data = self.server_id
+        self.udp_socket.sendto(data.encode(), ("<broadcast>", port))
+        print("sent service announcement")
+        sleep(5)
