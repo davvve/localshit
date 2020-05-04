@@ -8,13 +8,23 @@ Project of Lecture DBE14 Distributed Systems
 - Frederick Dehner
 - David Lüttmann
 
-## Overview
+## Build and run docker
 
-## Install
+Build Docker Image (after every change)
+
+```
+docker build -t localshit .
+```
+
+Run docker
+
+```
+docker run localshit
+```
 
 ## Usage
 
-Run application:
+Run application (without docker):
 
 ```
 python src/localshit/run.py 
