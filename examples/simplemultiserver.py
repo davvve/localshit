@@ -11,7 +11,11 @@ class Server(multiprocessing.Process):
         self.client_address = client_address
 
     def run(self):
-        message = "Hi %s. This is server %s:%s" % (self.client_address[0], str(self.client_address[1]), str(os.getpid()))
+        message = "Hi %s. This is server %s:%s" % (
+            self.client_address[0],
+            str(self.client_address[1]),
+            str(os.getpid()),
+        )
         self.server_socket.sendto(str.encode(message), self.client_address)
         print("Sent to client: %s" % self.client_address[0])
 
@@ -30,7 +34,10 @@ if __name__ == "__main__":
 
     while True:
         data, address = server_socket.recvfrom(buffer_size)
-        print("Received message: % at %s:%s" % (data.decode(), address[0], str(address[1])))
+        print(
+            "Received message: % at %s:%s"
+            % (data.decode(), address[0], str(address[1]))
+        )
         p = Server(server_socket, data, address)
         p.start()
         p.join()

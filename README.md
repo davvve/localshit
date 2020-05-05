@@ -29,3 +29,10 @@ Run application (without docker):
 ```
 python src/localshit/run.py 
 ```
+
+## Examples
+To run the examles within a docker container use
+
+```
+docker run -it --rm  -v "$PWD/examples":"/usr/src/widget_app" python:3 python /usr/src/widget_app/dynamicdiscover.py
+```

@@ -4,12 +4,18 @@ import os
 
 
 def send_message(server_socket, client_address):
-    message = "Hi %s. This is server %s:%s" % (self.client_address[0], str(self.client_address[1]), str(os.getpid()))
-    self.server_socket.sendto(str.encode(message), self.client_address)
-    print("Sent to client: %s" % self.client_address)
+    message = "Hi %s. This is server %s:%s" % (
+        client_address[0],
+        str(client_address[1]),
+        str(os.getpid()),
+    )
+    server_socket.sendto(str.encode(message), client_address)
+    print("Sent to client: %s" % client_address)
+
 
 def test(x):
     return x * x
+
 
 if __name__ == "__main__":
     number_processes = 4
@@ -27,5 +33,8 @@ if __name__ == "__main__":
 
     while True:
         data, address = server_socket.recvfrom(buffer_size)
-        print("Received message: % at %s:%s" % (data.decode(), address[0], str(address[1])))
+        print(
+            "Received message: % at %s:%s"
+            % (data.decode(), address[0], str(address[1]))
+        )
         pool.apply_async(send_message, args=(server_socket, address,))
