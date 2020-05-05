@@ -6,7 +6,7 @@ Adapted from https://stackoverflow.com/questions/21089268/python-service-discove
 
 from time import sleep
 from socket import socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_BROADCAST, IPPROTO_UDP, IP_MULTICAST_TTL, IPPROTO_IP
-from stop import StoppableThread
+from utils import StoppableThread
 
 import uuid
 import logging

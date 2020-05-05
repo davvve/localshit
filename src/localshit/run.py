@@ -6,10 +6,8 @@ import sys
 import time
 import logging
 import traceback
-
-sys.path.insert(0, "..")
-from service_discovery import ServiceDiscovery
-from service_announcement import ServiceAnnouncement
+from components import ServiceDiscovery
+from components import ServiceAnnouncement
 
 
 logging.basicConfig(

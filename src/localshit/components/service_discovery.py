@@ -7,7 +7,7 @@ Adapted from https://stackoverflow.com/questions/21089268/python-service-discove
 from socket import *
 from select import select
 import struct
-from stop import StoppableThread
+from utils import StoppableThread
 import logging
 
 logging.basicConfig(
