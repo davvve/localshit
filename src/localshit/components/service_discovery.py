@@ -16,7 +16,9 @@ logging.basicConfig(
 
 
 class ServiceDiscovery(StoppableThread):
-    def __init__(self, port, MCAST_GRP = '224.1.1.1', MCAST_PORT = 5007):
+    hosts = []
+
+    def __init__(self, port, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
         super(ServiceDiscovery, self).__init__()
         self.port = port
         self.MCAST_GRP = MCAST_GRP
@@ -26,7 +28,7 @@ class ServiceDiscovery(StoppableThread):
             self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         except AttributeError:
             pass
-        # self.udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32) 
+        # self.udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32)
         # self.udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 1)
 
         self.udp_socket.bind((self.MCAST_GRP, self.MCAST_PORT))
@@ -34,7 +36,6 @@ class ServiceDiscovery(StoppableThread):
         mreq = struct.pack("4sl", inet_aton(MCAST_GRP), INADDR_ANY)
 
         self.udp_socket.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq)
-
 
     def work_func(self):
 
@@ -45,4 +46,17 @@ class ServiceDiscovery(StoppableThread):
 
             data, addr = socket_data.recvfrom(1024)  # wait for a packet
             if data:
-                logging.info("got service announcement from %s:%s with id %s" % (addr[0], addr[1], data.decode()))
+                logging.info(
+                    "got service announcement from %s:%s with id %s"
+                    % (addr[0], addr[1], data.decode())
+                )
+                self.add_to_hosts(addr[0])
+    
+    def add_to_hosts(self, host):
+        if host not in self.hosts:
+            self.hosts.append(host)
+            logging.info("Discovered hosts: %s" % self.hosts)
+
+    def get_hosts(self):
+        return hosts
+

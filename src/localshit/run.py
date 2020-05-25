@@ -21,18 +21,20 @@ class LocalsHitManager:
         self.running = True
         logging.info("manager started!")
 
+        # initiate service discovery thread
         discovery_thread = ServiceDiscovery(10001)
         self.threads.append(discovery_thread)
 
+        # initiate service announcement thread
         announcement_thread = ServiceAnnouncement(10001)
         self.threads.append(announcement_thread)
 
         try:
+            # start threads
             for th in self.threads:
                 th.start()
 
-            logging.info("discovery_thread started")
-
+            # monitor threads and exit on failing
             while self.running:
                 for th in self.threads:
                     if not th.is_alive():
@@ -47,14 +49,15 @@ class LocalsHitManager:
         except Exception as e:
             logging.error(e)
         finally:
-            logging.info("stop discovery_thread...")
+            # graceful shutdown
+            logging.info("stopping threads...")
             for th in self.threads:
                 logging.info("Stopping thread %s." % th.__class__.__name__)
                 th.stop()
             for th in self.threads:
                 logging.info("Joining thread %s." % th.__class__.__name__)
                 th.join()
-            logging.info("discovery_thread stopped")
+            logging.info("threads stopped")
 
 
 if __name__ == "__main__":
