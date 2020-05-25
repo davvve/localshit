@@ -19,7 +19,7 @@ docker build -t localshit .
 Run docker
 
 ```
-docker run localshit
+docker run --rm localshit
 ```
 
 ## Usage
