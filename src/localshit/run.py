@@ -16,18 +16,22 @@ logging.basicConfig(
 
 
 class LocalsHitManager:
+    hosts = []
+
     def __init__(self):
         self.threads = []
         self.running = True
         logging.info("manager started!")
 
-        # initiate service discovery thread
-        discovery_thread = ServiceDiscovery(10001)
-        self.threads.append(discovery_thread)
 
         # initiate service announcement thread
-        announcement_thread = ServiceAnnouncement(10001)
+        announcement_thread = ServiceAnnouncement(self.hosts, 10001)
         self.threads.append(announcement_thread)
+
+
+        # initiate service discovery thread
+        discovery_thread = ServiceDiscovery(self.hosts, 10001)
+        self.threads.append(discovery_thread)
 
         try:
             # start threads

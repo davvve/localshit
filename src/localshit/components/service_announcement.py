@@ -19,6 +19,7 @@ from utils import StoppableThread
 
 import uuid
 import logging
+from select import select
 
 
 logging.basicConfig(
@@ -27,8 +28,10 @@ logging.basicConfig(
 
 
 class ServiceAnnouncement(StoppableThread):
-    def __init__(self, port, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
+
+    def __init__(self, hosts, port, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
         super(ServiceAnnouncement, self).__init__()
+        self.hosts = hosts
         self.port = port
         self.MCAST_GRP = MCAST_GRP
         self.MCAST_PORT = MCAST_PORT
@@ -37,14 +40,31 @@ class ServiceAnnouncement(StoppableThread):
         self.udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
         self.udp_socket.setsockopt(IPPROTO_IP, IP_MULTICAST_TTL, 32)
         self.server_id = str(uuid.uuid4())
+
+        self.socket_unicast = socket(AF_INET, SOCK_DGRAM)
+        self.socket_unicast.bind(("0.0.0.0", 10001))
+
         self.service_announcement()
 
     def work_func(self):
         try:
-            data = "%s:%s:%s" % ("HB", self.server_id, "1")
-            self.udp_socket.sendto(data.encode(), (self.MCAST_GRP, self.MCAST_PORT))
-            logging.info("sent heartbeat")
-            sleep(5)
+            inputready, outputready, exceptready = select([self.socket_unicast], [], [], 1)
+
+            for socket_data in inputready:
+
+                data, addr = socket_data.recvfrom(1024)
+                if data:
+                    parts = data.decode().split(":")
+                    logging.info("Got Reply from %s with %s" % (addr[0], parts))
+
+                    if parts[0] == "RP":
+                        logging.info(
+                            "got message reply from %s:%s with id %s"
+                            % (addr[0], addr[1], data.decode())
+                        )
+                        self.add_to_hosts(addr[0])
+
+
         except Exception as e:
             logging.error("Error: %s" % e)
 
@@ -52,3 +72,9 @@ class ServiceAnnouncement(StoppableThread):
         data = "%s:%s:%s" % ("SA", self.server_id, "Hello World!")
         self.udp_socket.sendto(data.encode(), (self.MCAST_GRP, self.MCAST_PORT))
         logging.info("sent service announcement")
+
+    def add_to_hosts(self, host):
+        if host not in self.hosts:
+            self.hosts.append(host)
+            logging.info("Discovered hosts: %s" % self.hosts)
+
