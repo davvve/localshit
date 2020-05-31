@@ -55,13 +55,8 @@ class ServiceAnnouncement(StoppableThread):
                 data, addr = socket_data.recvfrom(1024)
                 if data:
                     parts = data.decode().split(":")
-                    logging.info("Got Reply from %s with %s" % (addr[0], parts))
 
                     if parts[0] == "RP":
-                        logging.info(
-                            "got message reply from %s:%s with id %s"
-                            % (addr[0], addr[1], data.decode())
-                        )
                         self.add_to_hosts(addr[0])
 
 
@@ -71,7 +66,7 @@ class ServiceAnnouncement(StoppableThread):
     def service_announcement(self):
         data = "%s:%s:%s" % ("SA", self.server_id, "Hello World!")
         self.udp_socket.sendto(data.encode(), (self.MCAST_GRP, self.MCAST_PORT))
-        logging.info("sent service announcement")
+        logging.info("service announcement...")
 
     def add_to_hosts(self, host):
         if host not in self.hosts:

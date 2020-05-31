@@ -46,20 +46,13 @@ class ServiceDiscovery(StoppableThread):
     def work_func(self):
 
         inputready, outputready, exceptready = select([self.udp_socket], [], [], 1)
-        # logging.info("waiting for connection...")
 
         for socket_data in inputready:
 
             data, addr = socket_data.recvfrom(1024)  # wait for a packet
             if data:
-                
-
                 parts = data.decode().split(":")
                 if parts[0] == "SA" and addr[0] != self.own_addess:
-                    logging.info(
-                        "got service announcement from %s:%s with id %s"
-                        % (addr[0], addr[1], data.decode())
-                    )
                     self.add_to_hosts(addr[0])
                     self.socket_unicast.sendto("RP:Hello!".encode(), (addr[0], self.UCAST_PORT))
     
