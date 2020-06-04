@@ -15,12 +15,11 @@ from socket import (
     IP_MULTICAST_TTL,
     IPPROTO_IP,
 )
-from utils import StoppableThread
-
+from select import select
 import uuid
 import logging
-from select import select
 
+from utils import StoppableThread
 
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
@@ -29,16 +28,15 @@ logging.basicConfig(
 
 class ServiceAnnouncement(StoppableThread):
 
-    def __init__(self, hosts, port, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
+    def __init__(self, hosts, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
         super(ServiceAnnouncement, self).__init__()
         self.hosts = hosts
-        self.port = port
+        self.UCAST_PORT = UCAST_PORT
         self.MCAST_GRP = MCAST_GRP
         self.MCAST_PORT = MCAST_PORT
-        logging.info("ServiceAnnouncement started")
 
-        self.udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
-        self.udp_socket.setsockopt(IPPROTO_IP, IP_MULTICAST_TTL, 32)
+        self.socket_multicast = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+        self.socket_multicast.setsockopt(IPPROTO_IP, IP_MULTICAST_TTL, 32)
         self.server_id = str(uuid.uuid4())
 
         self.socket_unicast = socket(AF_INET, SOCK_DGRAM)
@@ -55,17 +53,15 @@ class ServiceAnnouncement(StoppableThread):
                 data, addr = socket_data.recvfrom(1024)
                 if data:
                     parts = data.decode().split(":")
-
                     if parts[0] == "RP":
                         self.add_to_hosts(addr[0])
-
 
         except Exception as e:
             logging.error("Error: %s" % e)
 
     def service_announcement(self):
-        data = "%s:%s:%s" % ("SA", self.server_id, "Hello World!")
-        self.udp_socket.sendto(data.encode(), (self.MCAST_GRP, self.MCAST_PORT))
+        data = "%s:%s" % ("SA", self.server_id)
+        self.socket_multicast.sendto(data.encode(), (self.MCAST_GRP, self.MCAST_PORT))
         logging.info("service announcement...")
 
     def add_to_hosts(self, host):

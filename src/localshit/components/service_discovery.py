@@ -44,6 +44,7 @@ class ServiceDiscovery(StoppableThread):
         self.own_addess = gethostbyname(hostname)
 
     def work_func(self):
+        logging.info("waiting...")
 
         inputready, outputready, exceptready = select([self.udp_socket], [], [], 1)
 
@@ -54,7 +55,8 @@ class ServiceDiscovery(StoppableThread):
                 parts = data.decode().split(":")
                 if parts[0] == "SA" and addr[0] != self.own_addess:
                     self.add_to_hosts(addr[0])
-                    self.socket_unicast.sendto("RP:Hello!".encode(), (addr[0], self.UCAST_PORT))
+                    message = "RP:%s" % self.own_addess
+                    self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
     
     def add_to_hosts(self, host):
         if host not in self.hosts:
