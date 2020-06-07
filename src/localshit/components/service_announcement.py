@@ -14,6 +14,8 @@ from socket import (
     IPPROTO_UDP,
     IP_MULTICAST_TTL,
     IPPROTO_IP,
+    gethostname,
+    gethostbyname
 )
 from select import select
 import uuid
@@ -42,6 +44,9 @@ class ServiceAnnouncement(StoppableThread):
         self.socket_unicast = socket(AF_INET, SOCK_DGRAM)
         self.socket_unicast.bind(("0.0.0.0", 10001))
 
+        hostname = gethostname()
+        self.own_addess = gethostbyname(hostname)
+
         self.service_announcement()
 
     def work_func(self):
@@ -65,7 +70,5 @@ class ServiceAnnouncement(StoppableThread):
         logging.info("service announcement...")
 
     def add_to_hosts(self, host):
-        if host not in self.hosts:
-            self.hosts.append(host)
-            logging.info("Discovered hosts: %s" % self.hosts)
+        self.hosts.add_host(host, self.own_addess)
 

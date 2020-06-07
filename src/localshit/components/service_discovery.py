@@ -16,8 +16,6 @@ logging.basicConfig(
 
 
 class ServiceDiscovery(StoppableThread):
-    hosts = []
-
     def __init__(self, hosts, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
         super(ServiceDiscovery, self).__init__()
         self.hosts = hosts
@@ -42,6 +40,7 @@ class ServiceDiscovery(StoppableThread):
 
         hostname = gethostname()
         self.own_addess = gethostbyname(hostname)
+        self.add_to_hosts(self.own_addess)
 
     def work_func(self):
         logging.info("waiting...")
@@ -59,12 +58,5 @@ class ServiceDiscovery(StoppableThread):
                     self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
     
     def add_to_hosts(self, host):
-        if host not in self.hosts:
-            self.hosts.append(host)
-            logging.info("Discovered hosts: %s" % self.hosts)
-        else:
-            logging.info("Host %s was already discovered" % host)
-
-    def get_hosts(self):
-        return hosts
+        self.hosts.add_host(host, self.own_addess)
 

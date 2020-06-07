@@ -6,6 +6,7 @@ import sys
 import time
 import logging
 import traceback
+from components import Ring
 from components import ServiceDiscovery
 from components import ServiceAnnouncement
 
@@ -16,9 +17,9 @@ logging.basicConfig(
 
 
 class LocalsHitManager:
-    hosts = []
 
     def __init__(self):
+        self.hosts = Ring()
         self.threads = []
         self.running = True
         logging.info("manager started!")
