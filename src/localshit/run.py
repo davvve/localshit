@@ -7,6 +7,7 @@ import time
 import logging
 import traceback
 from components import Ring
+from components import Election
 from components import ServiceDiscovery
 from components import ServiceAnnouncement
 
@@ -20,13 +21,14 @@ class LocalsHitManager:
 
     def __init__(self):
         self.hosts = Ring()
+        self.election = Election()
         self.threads = []
         self.running = True
         logging.info("manager started!")
 
 
         # initiate service announcement thread
-        announcement_thread = ServiceAnnouncement(self.hosts, 10001)
+        announcement_thread = ServiceAnnouncement(self.hosts, self.election, 10001)
         self.threads.append(announcement_thread)
 
 

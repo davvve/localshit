@@ -20,6 +20,7 @@ from socket import (
 from select import select
 import uuid
 import logging
+import time
 
 from utils import StoppableThread
 
@@ -30,9 +31,10 @@ logging.basicConfig(
 
 class ServiceAnnouncement(StoppableThread):
 
-    def __init__(self, hosts, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
+    def __init__(self, hosts, election, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
         super(ServiceAnnouncement, self).__init__()
         self.hosts = hosts
+        self.election = election
         self.UCAST_PORT = UCAST_PORT
         self.MCAST_GRP = MCAST_GRP
         self.MCAST_PORT = MCAST_PORT
@@ -48,6 +50,7 @@ class ServiceAnnouncement(StoppableThread):
         self.own_addess = gethostbyname(hostname)
 
         self.service_announcement()
+        self.last_response = time.time()
 
     def work_func(self):
         try:
@@ -63,6 +66,12 @@ class ServiceAnnouncement(StoppableThread):
 
         except Exception as e:
             logging.error("Error: %s" % e)
+
+        # if no response after certain time, start election
+        time_diff = time.time() - self.last_response
+        if time_diff >= 5 and self.election.participant is False:
+            self.election.start_election()
+
 
     def service_announcement(self):
         data = "%s:%s" % ("SA", self.server_id)
