@@ -22,17 +22,14 @@ import uuid
 import logging
 import time
 
-from utils import StoppableThread
-
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
 )
 
 
-class ServiceAnnouncement(StoppableThread):
+class ServiceAnnouncement:
 
     def __init__(self, hosts, election, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
-        super(ServiceAnnouncement, self).__init__()
         self.hosts = hosts
         self.election = election
         self.UCAST_PORT = UCAST_PORT
@@ -49,35 +46,46 @@ class ServiceAnnouncement(StoppableThread):
         hostname = gethostname()
         self.own_addess = gethostbyname(hostname)
 
-        self.service_announcement()
-        self.last_response = time.time()
+        self.announce_service()
 
-    def work_func(self):
-        try:
-            inputready, outputready, exceptready = select([self.socket_unicast], [], [], 1)
+        self.wait_for_hosts()
 
-            for socket_data in inputready:
+        
 
-                data, addr = socket_data.recvfrom(1024)
-                if data:
-                    parts = data.decode().split(":")
-                    if parts[0] == "RP":
-                        self.add_to_hosts(addr[0])
+    def wait_for_hosts(self):
+        last_response = time.time()
+        time_diff = 0
+        
+        while time_diff <= 3:
+            try:
+                inputready, outputready, exceptready = select([self.socket_unicast], [], [], 1)
 
-        except Exception as e:
-            logging.error("Error: %s" % e)
+                for socket_data in inputready:
 
-        # if no response after certain time, start election
-        time_diff = time.time() - self.last_response
-        if time_diff >= 5 and self.election.participant is False:
-            self.election.start_election()
+                    data, addr = socket_data.recvfrom(1024)
+                    if data:
+                        parts = data.decode().split(":")
+                        if parts[0] == "RP":
+                            self._add_to_hosts(addr[0])
 
+            except Exception as e:
+                logging.error("Error: %s" % e)
 
-    def service_announcement(self):
+            # if no response after certain time, start election
+            time_diff = time.time() - last_response
+
+        logging.info("service announcement finished.")
+        # if self.election.participant is False:
+        #    self.election.start_election()
+
+    def get_own_address(self):
+        return self.own_addess
+
+    def announce_service(self):
         data = "%s:%s" % ("SA", self.server_id)
         self.socket_multicast.sendto(data.encode(), (self.MCAST_GRP, self.MCAST_PORT))
         logging.info("service announcement...")
 
-    def add_to_hosts(self, host):
+    def _add_to_hosts(self, host):
         self.hosts.add_host(host, self.own_addess)
 

@@ -25,16 +25,21 @@ class LocalsHitManager:
         self.threads = []
         self.running = True
         logging.info("manager started!")
-
-
-        # initiate service announcement thread
-        announcement_thread = ServiceAnnouncement(self.hosts, self.election, 10001)
-        self.threads.append(announcement_thread)
-
-
+        
         # initiate service discovery thread
         discovery_thread = ServiceDiscovery(self.hosts, 10001)
         self.threads.append(discovery_thread)
+
+
+        # start service announcement
+        service_announcement = ServiceAnnouncement(self.hosts, self.election, 10001)
+        self.own_address = service_announcement.get_own_address()
+        self.hosts.add_host(self.own_address, self.own_address)
+
+        self.hosts.form_ring(self.own_address)
+
+
+        
 
         try:
             # start threads

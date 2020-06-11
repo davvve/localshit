@@ -39,8 +39,8 @@ class ServiceDiscovery(StoppableThread):
         self.socket_unicast = socket(AF_INET, SOCK_DGRAM)
 
         hostname = gethostname()
-        self.own_addess = gethostbyname(hostname)
-        self.add_to_hosts(self.own_addess)
+        self.own_address = gethostbyname(hostname)
+        # self.hosts.add_host(host, self.own_address)
 
     def work_func(self):
         logging.info("waiting...")
@@ -52,11 +52,10 @@ class ServiceDiscovery(StoppableThread):
             data, addr = socket_data.recvfrom(1024)  # wait for a packet
             if data:
                 parts = data.decode().split(":")
-                if parts[0] == "SA" and addr[0] != self.own_addess:
-                    self.add_to_hosts(addr[0])
-                    message = "RP:%s" % self.own_addess
+                if parts[0] == "SA" and addr[0] != self.own_address:
+                    self.hosts.add_host(addr[0], self.own_address)
+                    self.hosts.form_ring(self.own_address)
+                    message = "RP:%s" % self.own_address
                     self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
-    
-    def add_to_hosts(self, host):
-        self.hosts.add_host(host, self.own_addess)
+        
 
