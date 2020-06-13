@@ -19,7 +19,7 @@ class Ring:
         sorted_ip_ring = [socket.inet_ntoa(node) for node in sorted_binary_ring]
         return sorted_ip_ring
 
-    def add_host(self, host, own_ip):
+    def add_host(self, host):
         if host not in self.members:
             self.members.append(host) 
         else:

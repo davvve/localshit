@@ -10,6 +10,7 @@ from components import Ring
 from components import Election
 from components import ServiceDiscovery
 from components import ServiceAnnouncement
+from utils import utils
 
 
 logging.basicConfig(
@@ -25,6 +26,7 @@ class LocalsHitManager:
         self.threads = []
         self.running = True
         logging.info("manager started!")
+
         
         # initiate service discovery thread
         discovery_thread = ServiceDiscovery(self.hosts, 10001)
@@ -33,8 +35,8 @@ class LocalsHitManager:
 
         # start service announcement
         service_announcement = ServiceAnnouncement(self.hosts, self.election, 10001)
-        self.own_address = service_announcement.get_own_address()
-        self.hosts.add_host(self.own_address, self.own_address)
+        self.own_address = utils.get_host_address()
+        self.hosts.add_host(self.own_address)
 
         self.hosts.form_ring(self.own_address)
 

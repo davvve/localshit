@@ -4,10 +4,10 @@ Service Announcement
 Adapted from https://stackoverflow.com/questions/21089268/python-service-discovery-advertise-a-service-across-a-local-network
 """
 
-from socket import *
 from select import select
 import struct
 from utils import StoppableThread
+from utils import utils
 import logging
 
 logging.basicConfig(
@@ -20,32 +20,18 @@ class ServiceDiscovery(StoppableThread):
         super(ServiceDiscovery, self).__init__()
         self.hosts = hosts
         self.UCAST_PORT = UCAST_PORT
-        self.MCAST_GRP = MCAST_GRP
-        self.MCAST_PORT = MCAST_PORT
-        self.udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
-        try:
-            self.udp_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        except AttributeError:
-            pass
-        self.udp_socket.setsockopt(IPPROTO_IP, IP_MULTICAST_TTL, 1)
-        self.udp_socket.setsockopt(IPPROTO_IP, IP_MULTICAST_LOOP, 1)
 
-        self.udp_socket.bind((self.MCAST_GRP, self.MCAST_PORT))
+        self.socket_multicast = utils.get_multicast_socket()
+        utils.bind_multicast(self.socket_multicast, MCAST_GRP="224.1.1.1", MCAST_PORT=5007)
 
-        mreq = struct.pack("4sl", inet_aton(MCAST_GRP), INADDR_ANY)
+        self.socket_unicast = utils.get_unicast_socket()
 
-        self.udp_socket.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq)
-
-        self.socket_unicast = socket(AF_INET, SOCK_DGRAM)
-
-        hostname = gethostname()
-        self.own_address = gethostbyname(hostname)
-        # self.hosts.add_host(host, self.own_address)
+        self.own_address = utils.get_host_address()
 
     def work_func(self):
         logging.info("waiting...")
 
-        inputready, outputready, exceptready = select([self.udp_socket], [], [], 1)
+        inputready, outputready, exceptready = select([self.socket_multicast], [], [], 1)
 
         for socket_data in inputready:
 
@@ -53,7 +39,7 @@ class ServiceDiscovery(StoppableThread):
             if data:
                 parts = data.decode().split(":")
                 if parts[0] == "SA" and addr[0] != self.own_address:
-                    self.hosts.add_host(addr[0], self.own_address)
+                    self.hosts.add_host(addr[0])
                     self.hosts.form_ring(self.own_address)
                     message = "RP:%s" % self.own_address
                     self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
