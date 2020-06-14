@@ -21,6 +21,10 @@ class Election:
 
         logging.info("Election Class initialized")
 
+        self.start_election()
+
+        self.wait_for_response()
+
     def start_election(self):
         logging.info("starting election")
         # mark self as a participant
@@ -33,8 +37,6 @@ class Election:
         socket_unicast = utils.get_unicast_socket()
         socket_unicast.sendto(message.encode(), (neighbour, 10001))
         socket_unicast.close()
-
-        self.wait_for_response()
 
     def wait_for_response(self):
         last_response = time.time()
