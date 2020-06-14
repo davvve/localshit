@@ -69,6 +69,15 @@ class Election:
 
         if self.got_response is not True:
             logging.info("no one responds to leader elections.")
+            # set self as leader
+            self.elected_leader = self.current_member_ip
+            self.send_election_to_proxy()
+
+    def send_election_to_proxy(self):
+        socket_unicast = utils.get_unicast_socket()
+
+        new_message = "LE:%s" % self.elected_leader
+        socket_unicast.sendto(new_message.encode(), ("172.17.0.2", 10012))
 
     def forward_election_message(self, message):
         compare = utils.compare_adresses(message[1], self.current_member_ip)
@@ -116,6 +125,7 @@ class Election:
                 socket_unicast.sendto(
                     new_message.encode(), (self.hosts.get_neighbour(), 10001)
                 )
+                self.send_election_to_proxy()
             else:
                 logging.error("Leader Election: invalid result")
         else:
