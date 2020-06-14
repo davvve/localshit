@@ -6,13 +6,13 @@ logging.basicConfig(
 )
 
 
-
 class Ring:
     members = []
     sorted_ring = []
 
-    def __init__(self):
+    def __init__(self, current_member_ip):
         logging.info("Ring initialized")
+        self.current_member_ip = current_member_ip
 
     def _form_ring(self, members):
         sorted_binary_ring = sorted([socket.inet_aton(member) for member in members])
@@ -21,7 +21,7 @@ class Ring:
 
     def add_host(self, host):
         if host not in self.members:
-            self.members.append(host) 
+            self.members.append(host)
         else:
             logging.info("Host %s was already discovered" % host)
 
@@ -31,16 +31,14 @@ class Ring:
     def form_ring(self, own_ip):
         self.sorted_ring = self._form_ring(self.members)
         logging.info("Discovered hosts: %s" % self.sorted_ring)
-        left_member = self.get_neighbour(own_ip, direction='left')
+        left_member = self.get_neighbour(direction='left')
         logging.info("Own IP: %s | left Neighbour: %s" % (own_ip, left_member))
 
-        right_member = self.get_neighbour(own_ip, direction='right')
+        right_member = self.get_neighbour(direction='right')
         logging.info("Own IP: %s | right Neighbour: %s" % (own_ip, right_member))
 
-
-
-    def get_neighbour(self, current_member_ip, direction='left'):
-        current_member_index = self.sorted_ring.index(current_member_ip) if current_member_ip in self.sorted_ring else -1
+    def get_neighbour(self, direction='left'):
+        current_member_index = self.sorted_ring.index(self.current_member_ip) if self.current_member_ip in self.sorted_ring else -1
         if current_member_index != -1:
             if direction == 'left':
                 if current_member_index + 1 == len(self.sorted_ring):

@@ -5,7 +5,6 @@ from socket import (
     AF_INET,
     SOCK_DGRAM,
     SOL_SOCKET,
-    SO_BROADCAST,
     SO_REUSEADDR,
     IPPROTO_UDP,
     IP_MULTICAST_TTL,
@@ -22,12 +21,13 @@ logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
 )
 
+
 def get_host_address():
     hostname = gethostname()
     return gethostbyname(hostname)
 
-def get_multicast_socket():
 
+def get_multicast_socket():
     socket_mcast = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
     try:
         socket_mcast.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -44,8 +44,7 @@ def bind_multicast(socket_mcast, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
     mreq = struct.pack("4sl", inet_aton(MCAST_GRP), INADDR_ANY)
     socket_mcast.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq)
 
-    return
 
 def get_unicast_socket():
-     socket_ucast = socket(AF_INET, SOCK_DGRAM)
-     return socket_ucast
+    socket_ucast = socket(AF_INET, SOCK_DGRAM)
+    return socket_ucast

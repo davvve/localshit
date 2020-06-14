@@ -2,7 +2,6 @@
 Main class for starting a server instance.
 
 """
-import sys
 import time
 import logging
 import traceback
@@ -21,27 +20,29 @@ logging.basicConfig(
 class LocalsHitManager:
 
     def __init__(self):
-        self.hosts = Ring()
-        self.election = Election()
+
         self.threads = []
         self.running = True
         logging.info("manager started!")
 
-        
+        self.own_address = utils.get_host_address()
+        self.hosts = Ring(self.own_address)
+
+        # start service announcement
+        _ = ServiceAnnouncement(self.hosts, 10001)
+
+        self.hosts.add_host(self.own_address)
+        self.hosts.form_ring(self.own_address)
+
+        # start election
+        self.election = Election()
+
+        if self.election.participant is False:
+            self.election.start_election(self.hosts, self.own_address)
+
         # initiate service discovery thread
         discovery_thread = ServiceDiscovery(self.hosts, 10001)
         self.threads.append(discovery_thread)
-
-
-        # start service announcement
-        service_announcement = ServiceAnnouncement(self.hosts, self.election, 10001)
-        self.own_address = utils.get_host_address()
-        self.hosts.add_host(self.own_address)
-
-        self.hosts.form_ring(self.own_address)
-
-
-        
 
         try:
             # start threads

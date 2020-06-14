@@ -4,11 +4,9 @@ Service Announcement
 Adapted from https://stackoverflow.com/questions/21089268/python-service-discovery-advertise-a-service-across-a-local-network
 """
 
-from time import sleep, time
-from select import select
-import uuid
-import logging
 import time
+from select import select
+import logging
 from utils import utils
 
 
@@ -19,12 +17,10 @@ logging.basicConfig(
 
 class ServiceAnnouncement:
 
-    def __init__(self, hosts, election, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
+    def __init__(self, hosts, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
         self.hosts = hosts
-        self.election = election
         self.MCAST_GRP = MCAST_GRP
         self.MCAST_PORT = MCAST_PORT
-
 
         # Setup sockets
         self.socket_multicast = utils.get_multicast_socket()
@@ -36,13 +32,11 @@ class ServiceAnnouncement:
         self.announce_service()
         self.wait_for_hosts()
 
-        
-
     def wait_for_hosts(self):
         last_response = time.time()
         time_diff = 0
-        
-        while time_diff <= 3:
+
+        while time_diff <= 2:
             try:
                 inputready, outputready, exceptready = select([self.socket_unicast], [], [], 1)
 
@@ -57,15 +51,13 @@ class ServiceAnnouncement:
             except Exception as e:
                 logging.error("Error: %s" % e)
 
-            # if no response after certain time, start election
             time_diff = time.time() - last_response
 
+        self.socket_unicast.close()
+        time.sleep(0.1)
         logging.info("service announcement finished.")
-        # if self.election.participant is False:
-        #    self.election.start_election()
 
     def announce_service(self):
         data = "%s:%s" % ("SA", self.own_addess)
         self.socket_multicast.sendto(data.encode(), (self.MCAST_GRP, self.MCAST_PORT))
         logging.info("service announcement...")
-

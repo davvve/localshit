@@ -5,7 +5,6 @@ Adapted from https://stackoverflow.com/questions/21089268/python-service-discove
 """
 
 from select import select
-import struct
 from utils import StoppableThread
 from utils import utils
 import logging
@@ -25,13 +24,14 @@ class ServiceDiscovery(StoppableThread):
         utils.bind_multicast(self.socket_multicast, MCAST_GRP="224.1.1.1", MCAST_PORT=5007)
 
         self.socket_unicast = utils.get_unicast_socket()
+        self.socket_unicast.bind(("0.0.0.0", 10001))
 
         self.own_address = utils.get_host_address()
 
     def work_func(self):
         logging.info("waiting...")
 
-        inputready, outputready, exceptready = select([self.socket_multicast], [], [], 1)
+        inputready, outputready, exceptready = select([self.socket_multicast, self.socket_unicast], [], [], 1)
 
         for socket_data in inputready:
 
@@ -43,5 +43,8 @@ class ServiceDiscovery(StoppableThread):
                     self.hosts.form_ring(self.own_address)
                     message = "RP:%s" % self.own_address
                     self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
-        
-
+                elif parts[0] == "SE":
+                    logging.info("Got message for leader election!")
+                    message = "RE:%s" % self.own_address
+                    self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
+                    logging.info("Send response to %s:%s" % (addr[0], self.UCAST_PORT))
