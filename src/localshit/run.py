@@ -9,6 +9,7 @@ from components import Ring
 from components import Election
 from components import ServiceDiscovery
 from components import ServiceAnnouncement
+from components import StatusServer
 from utils import utils
 
 
@@ -18,7 +19,6 @@ logging.basicConfig(
 
 
 class LocalsHitManager:
-
     def __init__(self):
 
         self.threads = []
@@ -43,6 +43,9 @@ class LocalsHitManager:
         # initiate service discovery thread
         discovery_thread = ServiceDiscovery(self.hosts, self.election)
         self.threads.append(discovery_thread)
+
+        # optional, webserver for status
+        _ = StatusServer(self.hosts, self.election)
 
         try:
             # start threads
