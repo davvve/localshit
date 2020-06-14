@@ -15,14 +15,18 @@ logging.basicConfig(
 
 
 class ServiceDiscovery(StoppableThread):
-    def __init__(self, hosts, election, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
+    def __init__(
+        self, hosts, election, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007
+    ):
         super(ServiceDiscovery, self).__init__()
         self.hosts = hosts
         self.election = election
         self.UCAST_PORT = UCAST_PORT
 
         self.socket_multicast = utils.get_multicast_socket()
-        utils.bind_multicast(self.socket_multicast, MCAST_GRP="224.1.1.1", MCAST_PORT=5007)
+        utils.bind_multicast(
+            self.socket_multicast, MCAST_GRP="224.1.1.1", MCAST_PORT=5007
+        )
 
         self.socket_unicast = utils.get_unicast_socket()
         self.socket_unicast.bind(("0.0.0.0", 10001))
@@ -32,7 +36,9 @@ class ServiceDiscovery(StoppableThread):
     def work_func(self):
         logging.info("waiting...")
 
-        inputready, outputready, exceptready = select([self.socket_multicast, self.socket_unicast], [], [], 1)
+        inputready, outputready, exceptready = select(
+            [self.socket_multicast, self.socket_unicast], [], [], 1
+        )
 
         for socket_data in inputready:
 
@@ -43,10 +49,14 @@ class ServiceDiscovery(StoppableThread):
                     self.hosts.add_host(addr[0])
                     self.hosts.form_ring(self.own_address)
                     message = "RP:%s" % self.own_address
-                    self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
+                    self.socket_unicast.sendto(
+                        message.encode(), (addr[0], self.UCAST_PORT)
+                    )
                 elif parts[0] == "SE":
-                    logging.info("Got message for leader election from %s:%s" % (addr[0], self.UCAST_PORT))
+                    logging.info(
+                        "Got message for leader election from %s:%s"
+                        % (addr[0], self.UCAST_PORT)
+                    )
 
                     # TODO: Send message to next neighbour, not to sender
                     self.election.forward_election_message(parts)
-

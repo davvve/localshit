@@ -10,7 +10,6 @@ logging.basicConfig(
 
 
 class Election:
-
     def __init__(self, hosts, current_member_ip):
         # first, mark member as non-participant
         self.hosts = hosts
@@ -45,7 +44,9 @@ class Election:
 
         while time_diff <= 1:
             try:
-                inputready, outputready, exceptready = select.select([socket_unicast], [], [], 1)
+                inputready, outputready, exceptready = select.select(
+                    [socket_unicast], [], [], 1
+                )
 
                 for socket_data in inputready:
 
@@ -76,14 +77,17 @@ class Election:
             # TODO: forward message
             logging.info("CompareResult is larger. forward message")
             new_message = "SE:%s:%s" % (message[1], False)
-            socket_unicast.sendto(new_message.encode(), (self.hosts.get_neighbour(), 10001))
+            socket_unicast.sendto(
+                new_message.encode(), (self.hosts.get_neighbour(), 10001)
+            )
         elif compare is CompareResult.LOWER and self.participant is False:
             logging.info("CompareResult is lower. update message")
             new_message = "SE:%s:%s" % (self.current_member_ip, False)
-            socket_unicast.sendto(new_message.encode(), (self.hosts.get_neighbour(), 10001))
+            socket_unicast.sendto(
+                new_message.encode(), (self.hosts.get_neighbour(), 10001)
+            )
         elif compare is CompareResult.LOWER and self.participant is True:
             logging.info("Already participant of an election. Discard message")
         elif compare is CompareResult.SAME:
             logging.info("Message came back to sender. elected as leader.")
             self.isLeader = True
-

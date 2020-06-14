@@ -15,7 +15,7 @@ from socket import (
     INADDR_ANY,
     inet_aton,
     gethostname,
-    gethostbyname
+    gethostbyname,
 )
 
 logging.basicConfig(
@@ -57,7 +57,6 @@ def compare_adresses(first_address, second_address):
     """
     first = inet_aton(first_address)
     second = inet_aton(second_address)
-
 
     if first == second:
         logging.error("First address is same as second")

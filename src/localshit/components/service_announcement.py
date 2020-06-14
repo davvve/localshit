@@ -16,7 +16,6 @@ logging.basicConfig(
 
 
 class ServiceAnnouncement:
-
     def __init__(self, hosts, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
         self.hosts = hosts
         self.MCAST_GRP = MCAST_GRP
@@ -38,7 +37,9 @@ class ServiceAnnouncement:
 
         while time_diff <= 1:
             try:
-                inputready, outputready, exceptready = select([self.socket_unicast], [], [], 1)
+                inputready, outputready, exceptready = select(
+                    [self.socket_unicast], [], [], 1
+                )
 
                 for socket_data in inputready:
 

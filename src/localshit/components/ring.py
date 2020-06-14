@@ -31,16 +31,20 @@ class Ring:
     def form_ring(self, own_ip):
         self.sorted_ring = self._form_ring(self.members)
         logging.info("Discovered hosts: %s" % self.sorted_ring)
-        left_member = self.get_neighbour(direction='left')
+        left_member = self.get_neighbour(direction="left")
         logging.info("Own IP: %s | left Neighbour: %s" % (own_ip, left_member))
 
-        right_member = self.get_neighbour(direction='right')
+        right_member = self.get_neighbour(direction="right")
         logging.info("Own IP: %s | right Neighbour: %s" % (own_ip, right_member))
 
-    def get_neighbour(self, direction='left'):
-        current_member_index = self.sorted_ring.index(self.current_member_ip) if self.current_member_ip in self.sorted_ring else -1
+    def get_neighbour(self, direction="left"):
+        current_member_index = (
+            self.sorted_ring.index(self.current_member_ip)
+            if self.current_member_ip in self.sorted_ring
+            else -1
+        )
         if current_member_index != -1:
-            if direction == 'left':
+            if direction == "left":
                 if current_member_index + 1 == len(self.sorted_ring):
                     return self.sorted_ring[0]
                 else:
