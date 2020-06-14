@@ -55,7 +55,6 @@ class ServiceAnnouncement:
             time_diff = time.time() - last_response
 
         self.socket_unicast.close()
-        time.sleep(0.1)
         logging.info("service announcement finished.")
 
     def announce_service(self):

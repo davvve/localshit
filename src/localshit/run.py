@@ -45,7 +45,7 @@ class LocalsHitManager:
         self.threads.append(discovery_thread)
 
         # optional, webserver for status
-        _ = StatusServer(self.hosts, self.election)
+        # _ = StatusServer(self.hosts, self.election)
 
         try:
             # start threads

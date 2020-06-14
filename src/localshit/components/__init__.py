@@ -1,3 +1,4 @@
+# flake8: noqa: F401
 from .ring import Ring
 from .election import Election
 from .service_announcement import ServiceAnnouncement
