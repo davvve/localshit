@@ -17,6 +17,7 @@ class Election:
         self.participant = False
         self.isLeader = False
         self.got_response = False
+        self.elected_leader = ""
 
         logging.info("Election Class initialized")
 
@@ -55,7 +56,7 @@ class Election:
                         parts = data.decode().split(":")
                         if parts[0] == "SE":
                             self.got_response = True
-                            logging.info("Got response for leader election!")
+                            self.forward_election_message(parts)
 
             except Exception as e:
                 logging.error("Error: %s" % e)
@@ -70,24 +71,72 @@ class Election:
     def forward_election_message(self, message):
         compare = utils.compare_adresses(message[1], self.current_member_ip)
 
+        sender_id = message[1]
+        leader_elected = eval(message[2])
+
         socket_unicast = utils.get_unicast_socket()
         # TODO: check if message[2] is False, otherwise leader is elected
 
-        if compare is CompareResult.LARGER:
-            # TODO: forward message
-            logging.info("CompareResult is larger. forward message")
-            new_message = "SE:%s:%s" % (message[1], False)
-            socket_unicast.sendto(
-                new_message.encode(), (self.hosts.get_neighbour(), 10001)
-            )
-        elif compare is CompareResult.LOWER and self.participant is False:
-            logging.info("CompareResult is lower. update message")
-            new_message = "SE:%s:%s" % (self.current_member_ip, False)
-            socket_unicast.sendto(
-                new_message.encode(), (self.hosts.get_neighbour(), 10001)
-            )
-        elif compare is CompareResult.LOWER and self.participant is True:
-            logging.info("Already participant of an election. Discard message")
-        elif compare is CompareResult.SAME:
-            logging.info("Message came back to sender. elected as leader.")
-            self.isLeader = True
+        if leader_elected is False:
+            if compare is CompareResult.LARGER:
+                # 4.1 if id is larger, forward message to next member
+                logging.info("Leader Election: id is larger. Forward message.")
+                self.participant = True
+                new_message = "SE:%s:%s" % (sender_id, False)
+                socket_unicast.sendto(
+                    new_message.encode(), (self.hosts.get_neighbour(), 10001)
+                )
+            elif compare is CompareResult.LOWER and self.participant is False:
+                # 4.2 if id is smaller and not yes marked as participant, replace id and forward message to next member.
+                self.participant = True
+                logging.info(
+                    "Leader Election: Sender has lower id. replace id with own id."
+                )
+                new_message = "SE:%s:%s" % (self.current_member_ip, False)
+                socket_unicast.sendto(
+                    new_message.encode(), (self.hosts.get_neighbour(), 10001)
+                )
+            elif compare is CompareResult.LOWER and self.participant is True:
+                # 4.3 if id is smaller but already participant, then discard message
+                logging.info(
+                    "Leader Election: Already participant of an election. Discard message."
+                )
+            elif compare is CompareResult.SAME:
+                # 4.4 if message came back, set itself as leader and start second part algorithm. Inform others about elected leader.
+                logging.info(
+                    "Leader Election: Message came back to sender. Elected as leader."
+                )
+                self.participant = False
+                self.isLeader = True
+                self.elected_leader = self.current_member_ip
+                # start second part of algorithm, inform others about election
+                new_message = "SE:%s:%s" % (self.current_member_ip, True)
+                socket_unicast.sendto(
+                    new_message.encode(), (self.hosts.get_neighbour(), 10001)
+                )
+            else:
+                logging.error("Leader Election: invalid result")
+        else:
+            # forward message about elected leader
+            if sender_id is self.current_member_ip:
+                logging.info(
+                    "Leader Election: Message came back to sender. Election is over. Elected Leader: %s"
+                    % self.elected_leader
+                )
+            elif self.participant is True:
+                # elected message received. mark as non-participant, record election and forward message
+                self.participant = False
+                self.elected_leader = sender_id
+                logging.info(
+                    "Leader Election: Election message received. note it and forward it. Elected Leader: %s"
+                    % self.elected_leader
+                )
+                new_message = "SE:%s:%s" % (message[1], message[2])
+                socket_unicast.sendto(
+                    new_message.encode(), (self.hosts.get_neighbour(), 10001)
+                )
+            else:
+                logging.info(
+                    "Leader Election: Election is over. Elected Leader: %s"
+                    % self.elected_leader
+                )
