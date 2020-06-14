@@ -35,13 +35,13 @@ class LocalsHitManager:
         self.hosts.form_ring(self.own_address)
 
         # start election
-        self.election = Election()
+        self.election = Election(self.hosts, self.own_address)
 
         if self.election.participant is False:
-            self.election.start_election(self.hosts, self.own_address)
+            self.election.start_election()
 
         # initiate service discovery thread
-        discovery_thread = ServiceDiscovery(self.hosts, 10001)
+        discovery_thread = ServiceDiscovery(self.hosts, self.election)
         self.threads.append(discovery_thread)
 
         try:

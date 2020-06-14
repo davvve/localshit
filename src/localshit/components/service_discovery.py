@@ -15,9 +15,10 @@ logging.basicConfig(
 
 
 class ServiceDiscovery(StoppableThread):
-    def __init__(self, hosts, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
+    def __init__(self, hosts, election, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
         super(ServiceDiscovery, self).__init__()
         self.hosts = hosts
+        self.election = election
         self.UCAST_PORT = UCAST_PORT
 
         self.socket_multicast = utils.get_multicast_socket()
@@ -44,7 +45,8 @@ class ServiceDiscovery(StoppableThread):
                     message = "RP:%s" % self.own_address
                     self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
                 elif parts[0] == "SE":
-                    logging.info("Got message for leader election!")
-                    message = "RE:%s" % self.own_address
-                    self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
-                    logging.info("Send response to %s:%s" % (addr[0], self.UCAST_PORT))
+                    logging.info("Got message for leader election from %s:%s" % (addr[0], self.UCAST_PORT))
+
+                    # TODO: Send message to next neighbour, not to sender
+                    self.election.forward_election_message(parts)
+

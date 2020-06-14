@@ -36,7 +36,7 @@ class ServiceAnnouncement:
         last_response = time.time()
         time_diff = 0
 
-        while time_diff <= 2:
+        while time_diff <= 1:
             try:
                 inputready, outputready, exceptready = select([self.socket_unicast], [], [], 1)
 

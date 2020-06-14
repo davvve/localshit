@@ -1,5 +1,6 @@
 import logging
 import struct
+from enum import Enum
 from socket import (
     socket,
     AF_INET,
@@ -48,3 +49,26 @@ def bind_multicast(socket_mcast, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
 def get_unicast_socket():
     socket_ucast = socket(AF_INET, SOCK_DGRAM)
     return socket_ucast
+
+
+def compare_adresses(first_address, second_address):
+    """
+    comapares which address is the higher identifier and returns True if first is higher, otherwise false
+    """
+    first = inet_aton(first_address)
+    second = inet_aton(second_address)
+
+
+    if first == second:
+        logging.error("First address is same as second")
+        return CompareResult.SAME
+    elif first > second:
+        return CompareResult.LARGER
+    else:
+        return CompareResult.LOWER
+
+
+class CompareResult(Enum):
+    LARGER = 1
+    LOWER = 2
+    SAME = 3
