@@ -5,6 +5,7 @@ from socket import (
     socket,
     AF_INET,
     SOCK_DGRAM,
+    SOCK_STREAM,
     SOL_SOCKET,
     SO_REUSEADDR,
     IPPROTO_UDP,
@@ -49,6 +50,27 @@ def bind_multicast(socket_mcast, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
 def get_unicast_socket():
     socket_ucast = socket(AF_INET, SOCK_DGRAM)
     return socket_ucast
+
+
+def get_tcp_socket():
+    server_socket = socket(AF_INET, SOCK_STREAM)
+    server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    return server_socket
+
+
+def send_unicast(message, recipient):
+    socket_unicast = get_unicast_socket()
+
+    socket_unicast.sendto(message.encode(), recipient, 10001)
+    # TODO: make unicast reliable / with ack msg
+    """
+    socket_unicast.settimeout(1.0)
+    try:
+        data, server = socket_unicast.recvfrom(1024)
+        # Print the ACK the server sent
+    except socket.timeout:
+        print('Timed out')
+    """
 
 
 def compare_adresses(first_address, second_address):

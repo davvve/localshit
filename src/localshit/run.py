@@ -9,6 +9,7 @@ from components import Ring
 from components import Election
 from components import ServiceDiscovery
 from components import ServiceAnnouncement
+from components import ContentProvider
 from components import StatusServer
 from utils import utils
 
@@ -41,6 +42,9 @@ class LocalsHitManager:
         discovery_thread = ServiceDiscovery(self.hosts, self.election)
         self.threads.append(discovery_thread)
 
+        # initiate Content Provider
+        content_provider = ContentProvider(self.hosts, self.election)
+        self.threads.append(content_provider)
         # optional, webserver for status
         # _ = StatusServer(self.hosts, self.election)
 

@@ -9,6 +9,7 @@ logging.basicConfig(
 class Ring:
     members = []
     sorted_ring = []
+    clients = []
 
     def __init__(self, current_member_ip):
         logging.info("Ring initialized")
@@ -24,6 +25,12 @@ class Ring:
             self.members.append(host)
         else:
             logging.info("Host %s was already discovered" % host)
+
+    def add_client(self, host):
+        if host not in self.clients:
+            self.clients.append(host)
+        else:
+            logging.info("Client %s was already added" % host)
 
     def get_hosts(self):
         return self.members

@@ -4,6 +4,8 @@ Client
 """
 import logging
 import traceback
+import socket
+from select import select
 from utils import utils
 
 
@@ -15,49 +17,63 @@ logging.basicConfig(
 class Client:
     def __init__(self):
 
-        self.leader_id = ""
+        self.leader_id = "0.0.0.0"
         self.own_address = utils.get_host_address()
+        self.running = False
+        self.socket_servers = []
 
-        logging.info("proxy started at %s!" % self.own_address)
+        logging.info("client started at %s!" % self.own_address)
 
+        # initiate content server socket
+        self.socket_content = socket.socket(
+            socket.AF_INET, socket.SOCK_STREAM
+        )  # utils.get_unicast_socket()
+
+        # register at proxy and ask for content server
         new_message = "CL:%s" % (self.own_address)
-        socket_unicast = utils.get_unicast_socket()
-        socket_unicast.sendto(new_message.encode(), ("172.17.0.2", 10012))
-        
+        self.socket_proxy = utils.get_unicast_socket()
+        self.socket_proxy.bind(("0.0.0.0", 10013))
+        self.socket_proxy.sendto(new_message.encode(), ("172.17.0.2", 10012))
+        self.socket_servers.insert(0, self.socket_proxy)
 
-        socket_unicast.settimeout(1.0)
-        data, server = socket_unicast.recvfrom(1024)
-        if data:
-            parts = data.decode().split(":")
-            if parts[0] == "RP":
-                logging.info("Message received: %s" % parts[1])
-                self.leader_id = parts[1]
-                self.handle_messages(self.leader_id)
+        # set timeout. if timeout, print error
+        self.handle_messages(self.leader_id)
 
     def handle_messages(self, server_ip):
-        self.socket_content.connect(("172.17.0.2", 6000))
+        self.running = True
+        logging.info("Content Server: %s" % server_ip)
+        try:
+            self.socket_content.connect((server_ip, 6000))
+            self.socket_servers.insert(1, self.socket_content)
+        except Exception as e:
+            logging.error("No content server provided: %s" % e)
 
-        # TODO: listen to proxy_server if new leader is there and to socket server
-        # bekomme ich es mit, wenn socket server nicht mehr verfügbar ist???
-        inputready, outputready, exceptready = select(
-            [self.socket_unicast, self.socket_content], [], [], 1
-        )
+        while self.running:
 
-        for socket_data in inputready:
+            # TODO: listen to proxy_server if new leader is there and to socket server
+            # bekomme ich es mit, wenn socket server nicht mehr verfügbar ist???
+            inputready, outputready, exceptready = select(
+                self.socket_servers, [], [], 1
+            )
 
-            data, addr = socket_data.recvfrom(1024)  # wait for a packet
-            if data:
-                parts = data.decode().split(":")
-                if parts[0] == "RP":
-                    # new leader there. break and handle_messages again with new_leader
-                elif parts[0] == "CO":
-                    logging.info(
-                        "Got content from %s: %s"
-                        % (addr[0], parts[1])
-                    )
-                else:
-                    pass
+            for socket_data in inputready:
 
+                data, addr = socket_data.recvfrom(1024)  # wait for a packet
+                if data:
+                    parts = data.decode().split(":")
+                    if parts[0] == "RP":
+                        # new leader there. break and handle_messages again with new_leader
+                        self.running = False
+                        self.leader_id = parts[1]
+                        logging.info("New content server: %s" % self.leader_id)
+                        # self.socket_content.close()
+
+                    elif parts[0] == "CO":
+                        logging.info("Got content")
+                    else:
+                        logging.error("invalid message")
+
+        self.handle_messages(self.leader_id)
 
 
 if __name__ == "__main__":

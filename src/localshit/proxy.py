@@ -16,8 +16,9 @@ logging.basicConfig(
 class ProxyServer:
     def __init__(self):
 
-        self.leader_id = ""
+        self.leader_id = "0.0.0.0"
         self.own_address = utils.get_host_address()
+        self.connected_clients = []
 
         logging.info("proxy started at %s!" % self.own_address)
 
@@ -36,15 +37,25 @@ class ProxyServer:
                     parts = data.decode().split(":")
                     if parts[0] == "CL":
                         logging.info("Client connected with IP %s" % addr[0])
-                        self.handle_client_request(parts, addr)
+                        if addr not in self.connected_clients:
+                            self.connected_clients.append(addr)
+                        self.handle_client_request(addr, self.leader_id)
                     elif parts[0] == "LE":
                         logging.info("Leader elected: %s" % parts[1])
                         self.leader_id = parts[1]
+                        self.inform_clients_about_leader(
+                            self.leader_id, self.connected_clients
+                        )
 
-    def handle_client_request(self, message, addr):
-        new_message = "RP:%s" % (self.leader_id)
-        socket_unicast = utils.get_unicast_socket()
-        socket_unicast.sendto(new_message.encode(), addr)
+    def handle_client_request(self, addr, leader_id):
+        new_message = "RP:%s" % (leader_id)
+        socket_sender = utils.get_unicast_socket()
+        socket_sender.sendto(new_message.encode(), (addr[0], 10013))
+        logging.info("message sent to: %s:10012" % addr[0])
+
+    def inform_clients_about_leader(self, leader_id, clients):
+        for client in clients:
+            self.handle_client_request(client, leader_id)
 
 
 if __name__ == "__main__":
