@@ -71,6 +71,7 @@ class Election:
             logging.info("no one responds to leader elections.")
             # set self as leader
             self.elected_leader = self.current_member_ip
+            self.isLeader = True
             self.send_election_to_proxy()
 
     def send_election_to_proxy(self):
@@ -138,6 +139,7 @@ class Election:
             elif self.participant is True:
                 # elected message received. mark as non-participant, record election and forward message
                 self.participant = False
+                self.isLeader = False
                 self.elected_leader = sender_id
                 logging.info(
                     "Leader Election: Election message received. note it and forward it. Elected Leader: %s"
