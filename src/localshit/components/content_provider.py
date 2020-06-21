@@ -7,6 +7,7 @@ Adapted from https://stackoverflow.com/questions/21089268/python-service-discove
 from utils import StoppableThread
 import logging
 import time
+import socket
 
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
@@ -19,6 +20,7 @@ class ContentProvider(StoppableThread):
     ):
         super(ContentProvider, self).__init__()
         self.hosts = hosts
+        self.election = election
 
         logging.info("Starting ContentProvider")
 
@@ -27,18 +29,22 @@ class ContentProvider(StoppableThread):
         self.clients = []
 
     def work_func(self):
+        
+        if self.election.isLeader:
+            time_diff = time.time() - self.last_update
+            if time_diff >= 3:
+                logging.info("publish new quote")
 
-        # TODO: only if this server is elected leader
-        time_diff = time.time() - self.last_update
-        if time_diff >= 3:
-            logging.info("publish new quote")
-
-            data = "%s:%s" % ("CO", "hello world")
+                data = "%s:%s" % ("CO", "hello world")
+                for client in self.hosts.clients:
+                    try:
+                        client.send(data.encode())
+                    except Exception:
+                        logging.info("Client not available")
+                        if client in self.hosts.clients:
+                            self.hosts.clients.remove(client)
+                self.last_update = time.time()
+        else:
             for client in self.hosts.clients:
-                try:
-                    client.send(data.encode())
-                except Exception:
-                    logging.info("Client not available")
-                    if client in self.hosts.clients:
-                        self.hosts.clients.remove(client)
-            self.last_update = time.time()
+                logging.info("Shutodown socket %s" % client)
+                self.hosts.clients.remove(client)
