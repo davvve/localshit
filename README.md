@@ -8,6 +8,17 @@ Project of Lecture DBE14 Distributed Systems
 - Frederick Dehner
 - David Lüttmann
 
+## Install & run
+Install:
+```
+pip install -e .
+```
+Run:
+```
+localshit
+```
+
+
 ## Build and run docker
 
 Build Docker Image (after every change)

@@ -4,10 +4,11 @@ Service Announcement
 Adapted from https://stackoverflow.com/questions/21089268/python-service-discovery-advertise-a-service-across-a-local-network
 """
 
-from utils import StoppableThread
+from localshit.utils import StoppableThread
 import logging
 import time
 import socket
+import json
 
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
@@ -48,3 +49,8 @@ class ContentProvider(StoppableThread):
             for client in self.hosts.clients:
                 logging.info("Shutodown socket %s" % client)
                 self.hosts.clients.remove(client)
+
+
+    def get_quote(self):
+        data = json.loads("jokes.json")
+        print(len(data))

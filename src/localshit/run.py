@@ -5,13 +5,13 @@ Main class for starting a server instance.
 import time
 import logging
 import traceback
-from components import Ring
-from components import Election
-from components import ServiceDiscovery
-from components import ServiceAnnouncement
-from components import ContentProvider
-from components import StatusServer
-from utils import utils
+from localshit.components import Ring
+from localshit.components import Election
+from localshit.components import ServiceDiscovery
+from localshit.components import ServiceAnnouncement
+from localshit.components import ContentProvider
+from localshit.components import StatusServer
+from localshit.utils import utils
 
 
 logging.basicConfig(
@@ -77,12 +77,3 @@ class LocalsHitManager:
                 logging.info("Joining thread %s." % th.__class__.__name__)
                 th.join()
             logging.info("threads stopped")
-
-
-if __name__ == "__main__":
-    try:
-        logging.info("starting manager...")
-        app = LocalsHitManager()
-    except Exception as e:
-        logging.error("Error while starting app: %s" % e)
-        traceback.print_exc()

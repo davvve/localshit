@@ -5,7 +5,7 @@ Main class for starting a proxy server.
 import logging
 import traceback
 import select
-from utils import utils
+from localshit.utils import utils
 
 
 logging.basicConfig(

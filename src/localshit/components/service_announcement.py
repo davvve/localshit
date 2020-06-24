@@ -7,7 +7,7 @@ Adapted from https://stackoverflow.com/questions/21089268/python-service-discove
 import time
 from select import select
 import logging
-from utils import utils
+from localshit.utils import utils
 
 
 logging.basicConfig(
