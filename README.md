@@ -8,23 +8,28 @@ Project of Lecture DBE14 Distributed Systems
 - Frederick Dehner
 - David Lüttmann
 
-## Install & run
+## Install & run (without docker)
 Install:
 ```
 pip install -e .
 ```
-Run:
+Run backend:
 ```
 localshit
 ```
 
+Run client (same for proxy):
+```
+client
+```
 
-## Build and run docker
 
-Build Docker Image (after every change)
+## Build and run backend
+
+Build Docker image for backends (after every change)
 
 ```
-docker build -t localshit .
+docker build -f Dockerfile.backend -t localshit .
 ```
 
 Run docker
@@ -33,13 +38,34 @@ Run docker
 docker run --rm localshit
 ```
 
-## Usage
+## Build and run client
 
-Run application (without docker):
+Build Docker image for backends (after every change)
 
 ```
-python src/localshit/run.py 
+docker build -f Dockerfile.client -t localshit-client .
 ```
+
+Run docker
+
+```
+docker run --rm localshit-client
+```
+
+## Build and run client
+
+Build Docker image for backends (after every change)
+
+```
+docker build -f Dockerfile.proxy -t localshit-proxy .
+```
+
+Run docker
+
+```
+docker run --rm localshit-proxy
+```
+
 
 ## Examples
 To run the examles within a docker container use
