@@ -1,10 +1,3 @@
-"""
-Service Announcement
-
-Adapted from https://stackoverflow.com/questions/21089268/python-service-discovery-advertise-a-service-across-a-local-network
-"""
-
-from localshit.utils import StoppableThread
 import logging
 import time
 import socket
@@ -56,11 +49,13 @@ class ContentProvider(StoppableThread):
 
     def get_quote(self, filename):
         quote = None
-        rand = random.randint(0,50)
+        
         try:
             file = open(filename)
             data = json.load(file)
             quotes = data["value"]
+            counts = len(quotes)
+            rand = random.randint(0,counts-1)
             quote = quotes[rand]
             quote = quote["joke"]
         except Exception as e:
