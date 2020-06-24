@@ -1,7 +1,7 @@
 import unittest
-from localshit.components import ContentProvider
-from localshit.components import Ring
-from localshit.components import Election
+from localshit.components.content_provider import ContentProvider
+from localshit.components.ring import Ring
+from localshit.components.election import Election
 
 class TestContentProvider(unittest.TestCase):
     def test_jokes(self):

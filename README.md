@@ -66,6 +66,10 @@ Run docker
 docker run --rm localshit-proxy
 ```
 
+## Run tests
+```
+pytest tests -s
+```
 
 ## Examples
 To run the examles within a docker container use
