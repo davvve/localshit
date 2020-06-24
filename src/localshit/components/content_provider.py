@@ -9,6 +9,7 @@ import logging
 import time
 import socket
 import json
+import random
 
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
@@ -36,10 +37,11 @@ class ContentProvider(StoppableThread):
             if time_diff >= 3:
                 logging.info("publish new quote")
 
-                data = "%s:%s" % ("CO", "hello world")
+                quote = self.get_quote('jokes.json')
+                data = "%s:%s" % ("CO", quote)
                 for client in self.hosts.clients:
                     try:
-                        client.send(data.encode())
+                        client.send(data.encode('utf-8'))
                     except Exception:
                         logging.info("Client not available")
                         if client in self.hosts.clients:
@@ -51,6 +53,19 @@ class ContentProvider(StoppableThread):
                 self.hosts.clients.remove(client)
 
 
-    def get_quote(self):
-        data = json.loads("jokes.json")
-        print(len(data))
+    def get_quote(self, filename):
+        quote = None
+        rand = random.randint(0,50)
+        try:
+            file = open(filename)
+            data = json.load(file)
+            quotes = data["value"]
+            quote = quotes[rand]
+            quote = quote["joke"]
+        except Exception as e:
+            logging.error("Error while starting app: %s" % e)
+
+        return quote
+
+        
+

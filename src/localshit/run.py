@@ -37,6 +37,8 @@ class LocalsHitManager:
 
         # start election
         self.election = Election(self.hosts, self.own_address)
+        self.election.start_election()
+        self.election.wait_for_response()
 
         # initiate service discovery thread
         discovery_thread = ServiceDiscovery(self.hosts, self.election)

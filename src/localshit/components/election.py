@@ -21,10 +21,6 @@ class Election:
 
         logging.info("Election Class initialized")
 
-        self.start_election()
-
-        self.wait_for_response()
-
     def start_election(self):
         logging.info("starting election")
         # mark self as a participant
