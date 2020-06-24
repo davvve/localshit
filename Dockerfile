@@ -1,5 +1,9 @@
 FROM python:3
 
-ADD src/localshit /
+COPY . /app
+WORKDIR /app
 
-CMD [ "python", "./run.py" ]
+# RUN pip install --no-cache-dir --upgrade pip
+
+RUN pip install --no-cache-dir -e .
+CMD [ "localshit"]

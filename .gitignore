@@ -1,2 +1,12 @@
 *.pyc
 examples/lecture/*
+src/localshit.egg-info/entry_points.txt
+src/localshit.egg-info/dependency_links.txt
+src/localshit.egg-info/PKG-INFO
+src/localshit.egg-info/SOURCES.txt
+src/localshit.egg-info/top_level.txt
+localshit.egg-info/dependency_links.txt
+localshit.egg-info/PKG-INFO
+localshit.egg-info/SOURCES.txt
+localshit.egg-info/top_level.txt
+distributed_systems.code-workspace
