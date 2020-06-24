@@ -5,7 +5,7 @@ Adapted from https://stackoverflow.com/questions/21089268/python-service-discove
 """
 
 from select import select
-from localshit.utils import StoppableThread
+from localshit.utils.stop import StoppableThread
 from localshit.utils import utils
 import logging
 

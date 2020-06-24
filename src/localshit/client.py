@@ -8,7 +8,7 @@ import socket
 import time
 import threading
 from select import select
-from utils import utils
+from localshit.utils import utils
 
 
 logging.basicConfig(
@@ -64,7 +64,7 @@ class Client:
 
                 data, addr = socket_data.recvfrom(1024)  # wait for a packet
                 if data:
-                    parts = data.decode().split(":")
+                    parts = data.decode('utf-8').split(":")
                     if parts[0] == "RP":
                         # new leader there. break and handle_messages again with new_leader
                         self.running = False
@@ -88,7 +88,7 @@ class Client:
         
 
 
-if __name__ == "__main__":
+def main():
     try:
         logging.info("starting proxy...")
         app = Client()

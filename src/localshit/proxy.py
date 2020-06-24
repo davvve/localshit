@@ -58,7 +58,7 @@ class ProxyServer:
             self.handle_client_request(client, leader_id)
 
 
-if __name__ == "__main__":
+def main():
     try:
         logging.info("starting proxy...")
         app = ProxyServer()

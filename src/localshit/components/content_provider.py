@@ -10,6 +10,7 @@ import time
 import socket
 import json
 import random
+from localshit.utils.stop import StoppableThread
 
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",

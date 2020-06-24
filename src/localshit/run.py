@@ -5,12 +5,12 @@ Main class for starting a server instance.
 import time
 import logging
 import traceback
-from localshit.components import Ring
-from localshit.components import Election
-from localshit.components import ServiceDiscovery
-from localshit.components import ServiceAnnouncement
-from localshit.components import ContentProvider
-from localshit.components import StatusServer
+from localshit.components.ring import Ring
+from localshit.components.election import Election
+from localshit.components.service_discovery import ServiceDiscovery
+from localshit.components.service_announcement import ServiceAnnouncement
+from localshit.components.content_provider import ContentProvider
+from localshit.components.webserver import StatusServer
 from localshit.utils import utils
 
 

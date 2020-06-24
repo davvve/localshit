@@ -2,7 +2,7 @@ import logging
 import select
 import time
 from localshit.utils import utils
-from localshit.utils import CompareResult
+from localshit.utils.utils import CompareResult
 
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
