@@ -23,10 +23,16 @@ logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
 )
 
+def get_host_address(remote_server="google.com"):
+    """
+    Return the/a network-facing IP number for this system.
+    """
+    # hostname = gethostname()
+    # return gethostbyname(hostname)
 
-def get_host_address():
-    hostname = gethostname()
-    return gethostbyname(hostname)
+    with socket(AF_INET, SOCK_DGRAM) as s: 
+        s.connect((remote_server, 80))
+        return s.getsockname()[0]
 
 
 def get_multicast_socket():

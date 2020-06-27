@@ -77,3 +77,23 @@ To run the examles within a docker container use
 ```
 docker run -it --rm  -v "$PWD/examples":"/usr/src/widget_app" python:3 python /usr/src/widget_app/dynamicdiscover.py
 ```
+
+# Set up vagrant
+
+1. Install VirtualBox
+2. Install Vagrant
+3. Add hashicorp/bionic64 box image: ``` vagrant box add hashicorp/bionic64```
+4. (Init Vagrantfile: ```vagrant init hashicorp/bionic64```)
+5. ```vagrant up```
+6. ```sudo apt-get updates```
+7. ```sudo apt-get -y install python3-pip```
+8. Update setuptools: ```pip3 install setuptools```
+9. Install localshit: pip3 install -e .
+10. sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1
+11. pip install --upgrade pip
+12. apt-get install python3-venv
+
+## Run Vagrant
+1. ```vagrant up```
+2. ```vagrant ssh```
+3. ```vagrant halt```
