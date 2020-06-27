@@ -1,0 +1,97 @@
+<html>
+<head>
+  <title>Simple client</title>
+
+  <script type="text/javascript">
+
+    var ws;
+    var isConnected = false;
+
+    var HttpClient = function() {
+        this.get = function(aUrl, aCallback) {
+            var anHttpRequest = new XMLHttpRequest();
+            anHttpRequest.onreadystatechange = function() { 
+                if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+                    aCallback(anHttpRequest.responseText);
+            }
+
+            anHttpRequest.open( "GET", aUrl, true );            
+            anHttpRequest.send( null );
+        }
+    }
+    
+    function init() {
+
+
+      initWebSocket()
+
+    }
+
+    function initWebSocket() {
+      var client = new HttpClient();
+      client.get('/leader', function(response) {
+          
+          leader_json = JSON.parse(response)
+          console.log(leader_json.leader)
+          ws = new WebSocket("ws://"+leader_json.leader+":10013/");
+
+          // Set event handlers.
+          ws.onopen = function() {
+            console.log("onopen")
+            isConnected = true;
+          };
+          
+          ws.onmessage = function(e) {
+            // e.data contains received string.
+            message = e.data.split(":")
+            output(message[1]);
+            console.log("onmessage: " + e.data);
+          };
+          
+          ws.onclose = function() {
+            if (isConnected) {
+              isConnected = false
+              output("no host");
+              console.log("no host. search for new host...");
+            }
+            console.log("onclose");
+            setTimeout(initWebSocket, 1000)
+          };
+
+          ws.onerror = function(e) {
+            console.log(e)
+          };
+      });
+    }
+    
+    function onSubmit() {
+      var input = document.getElementById("input");
+      ws.send(input.value);
+      output("send: " + input.value);
+      console.log("send: " + input.value);
+      input.value = "";
+      input.focus();
+    }
+    
+    function onCloseClick() {
+      ws.close();
+    }
+    
+    function output(str) {
+      var log = document.getElementById("log");
+      var escaped = str.replace(/&/, "&amp;").replace(/</, "&lt;").
+        replace(/>/, "&gt;").replace(/"/, "&quot;"); // "
+      log.innerHTML = log.innerHTML + "<br>" + escaped;
+    }
+
+  </script>
+</head>
+<body onload="init();">
+  <form onsubmit="onSubmit(); return false;">
+    <input type="text" id="input">
+    <input type="submit" value="Send">
+    <button onclick="onCloseClick(); return false;">close</button>
+  </form>
+  <div id="log"></div>
+</body>
+</html>

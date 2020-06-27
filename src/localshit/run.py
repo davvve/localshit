@@ -36,7 +36,7 @@ class LocalsHitManager:
         self.hosts.form_ring(self.own_address)
 
         # start election
-        self.election = Election(self.hosts, self.own_address)
+        self.election = Election(self.hosts, self.own_address, proxy="172.17.0.2")
         self.election.start_election()
         self.election.wait_for_response()
 

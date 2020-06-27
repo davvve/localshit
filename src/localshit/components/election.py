@@ -10,10 +10,11 @@ logging.basicConfig(
 
 
 class Election:
-    def __init__(self, hosts, current_member_ip):
+    def __init__(self, hosts, current_member_ip, proxy="172.17.0.2"):
         # first, mark member as non-participant
         self.hosts = hosts
         self.current_member_ip = current_member_ip
+        self.proxy_address = proxy
         self.participant = False
         self.isLeader = False
         self.got_response = False
@@ -74,7 +75,7 @@ class Election:
         socket_unicast = utils.get_unicast_socket()
 
         new_message = "LE:%s" % self.elected_leader
-        socket_unicast.sendto(new_message.encode(), ("172.17.0.2", 10012))
+        socket_unicast.sendto(new_message.encode(), (self.proxy_address, 10012))
 
     def forward_election_message(self, message):
         compare = utils.compare_adresses(message[1], self.current_member_ip)
