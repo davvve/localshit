@@ -23,6 +23,10 @@ Run client (same for proxy):
 client
 ```
 
+## run backend with custom frontend / proxy server:
+```
+localshit -p "172.17.0.2"
+```
 
 ## Build and run backend
 

@@ -20,9 +20,7 @@ logging.basicConfig(
 
 
 class LocalsHitManager:
-    def __init__(self):
-        PROXY_ADDRESS = "192.168.0.179"
-
+    def __init__(self, proxy="172.17.0.2"):
         self.threads = []
         self.running = True
         logging.info("manager started!")
@@ -37,7 +35,7 @@ class LocalsHitManager:
         self.hosts.form_ring(self.own_address)
 
         # start election
-        self.election = Election(self.hosts, self.own_address, proxy=PROXY_ADDRESS)
+        self.election = Election(self.hosts, self.own_address, proxy=proxy)
         self.election.start_election()
         self.election.wait_for_response()
 
