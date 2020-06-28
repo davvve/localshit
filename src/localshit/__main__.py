@@ -18,7 +18,7 @@ def main():
 
     try:
         logging.info("starting manager...")
-        app = LocalsHitManager(proxy=proxy)
+        _ = LocalsHitManager(proxy=proxy)
     except Exception as e:
         logging.error("Error while starting app: %s" % e)
         traceback.print_exc()

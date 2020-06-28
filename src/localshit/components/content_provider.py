@@ -39,7 +39,6 @@ class ContentProvider(StoppableThread):
                 self.server.send_message_to_all(data)
                 self.last_update = time.time()
 
-
     def get_quote(self, filename):
         quote = None
 

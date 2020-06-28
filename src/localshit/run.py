@@ -10,7 +10,7 @@ from localshit.components.election import Election
 from localshit.components.service_discovery import ServiceDiscovery
 from localshit.components.service_announcement import ServiceAnnouncement
 from localshit.components.content_provider import ContentProvider
-from localshit.components.webserver import StatusServer
+from localshit.components.webserver import StatusServer  # noqa: F401
 from localshit.utils import utils
 
 
@@ -67,7 +67,8 @@ class LocalsHitManager:
         except KeyboardInterrupt:
             logging.info("Process terminated by user")
         except Exception as e:
-            logging.error(e)
+            logging.error("Error in run.py: %s" % e)
+            traceback.print_exc()
         finally:
             # graceful shutdown
             logging.info("stopping threads...")

@@ -15,13 +15,12 @@ from socket import (
     IPPROTO_IP,
     INADDR_ANY,
     inet_aton,
-    gethostname,
-    gethostbyname,
 )
 
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
 )
+
 
 def get_host_address(remote_server="google.com"):
     """
@@ -30,7 +29,7 @@ def get_host_address(remote_server="google.com"):
     # hostname = gethostname()
     # return gethostbyname(hostname)
 
-    with socket(AF_INET, SOCK_DGRAM) as s: 
+    with socket(AF_INET, SOCK_DGRAM) as s:
         s.connect((remote_server, 80))
         return s.getsockname()[0]
 

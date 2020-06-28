@@ -60,7 +60,6 @@ class ProxyServer:
                         self.leader_id = parts[1]
                         self.Handler.leader_ix = parts[1]
 
-
     def MakeCustomHandler(self, leader):
         class MyHandler(BaseHTTPRequestHandler):
             def __init__(self, *args, **kwargs):
