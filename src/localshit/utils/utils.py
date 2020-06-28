@@ -54,6 +54,7 @@ def bind_multicast(socket_mcast, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
 
 def get_unicast_socket():
     socket_ucast = socket(AF_INET, SOCK_DGRAM)
+    socket_ucast.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     return socket_ucast
 
 

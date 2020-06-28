@@ -8,6 +8,8 @@ from select import select
 from localshit.utils.stop import StoppableThread
 from localshit.utils import utils
 import logging
+import uuid
+import time
 
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
@@ -22,6 +24,7 @@ class ServiceDiscovery(StoppableThread):
         self.hosts = hosts
         self.election = election
         self.UCAST_PORT = UCAST_PORT
+        self.heartbeat_message = None
 
         self.socket_multicast = utils.get_multicast_socket()
         utils.bind_multicast(
@@ -36,10 +39,12 @@ class ServiceDiscovery(StoppableThread):
         self.socket_content.listen(1)
 
         self.own_address = utils.get_host_address()
+        self.last_heartbeat = time.time()
 
     def work_func(self):
         logging.info("waiting...")
 
+        # listen to incoming messages on multicast, unicast and client socket
         inputready, outputready, exceptready = select(
             [self.socket_multicast, self.socket_unicast, self.socket_content], [], [], 1
         )
@@ -53,18 +58,81 @@ class ServiceDiscovery(StoppableThread):
                 data, addr = socket_data.recvfrom(1024)  # wait for a packet
                 if data:
                     parts = data.decode().split(":")
-                    if parts[0] == "SA" and addr[0] != self.own_address:
-                        self.hosts.add_host(addr[0])
-                        self.hosts.form_ring(self.own_address)
-                        message = "RP:%s" % self.own_address
-                        self.socket_unicast.sendto(
-                            message.encode(), (addr[0], self.UCAST_PORT)
-                        )
+                    if parts[0] == "SA":
+                        self.handle_service_announcement(addr)
                     elif parts[0] == "SE":
-                        logging.info(
-                            "Got message for leader election from %s:%s"
-                            % (addr[0], self.UCAST_PORT)
-                        )
+                        self.handle_election_message(addr, parts)
+                    elif parts[0] == "HB":
+                        # TODO: forward heartbeat
+                        self.handle_heartbeat_message(addr, parts)
+                    elif parts[0] == "HR":
+                        # TODO: forward heartbeat
+                        self.handle_heartbeat_response(addr, parts)
+                    else:
+                        logging.error("Unknown message type: %s" % parts[0])
 
-                        # TODO: Send message to next neighbour, not to sender
-                        self.election.forward_election_message(parts)
+        # send heartbeat messages
+        self.heartbeat_worker(self.last_heartbeat)
+
+    def heartbeat_worker(self, last_heartbeat):
+        time_diff = time.time() - last_heartbeat
+
+        if time_diff >= 3:
+            logging.info("heartbeat...")
+            self.last_heartbeat = time.time()
+
+            # checking heartbeat
+            if self.heartbeat_message:
+                hb_age = time.time() - self.heartbeat_message["timestamp"]
+                if hb_age > 1:
+                    logging.error("Ring broken!")
+                    neighbour = self.hosts.get_neighbour()
+                    logging.info("Ring was broken. Lost %s" % neighbour)
+                    self.hosts.remove_host(neighbour)
+                    logging.info("Updated view: %s" % self.hosts.members)
+                    self.heartbeat_message = None
+
+                    if self.election.elected_leader == neighbour:
+                        self.election.start_election()
+                        self.election.wait_for_response()
+
+            # send new heartbeat
+            self.heartbeat_message = {
+                "id": str(uuid.uuid4()),
+                "sender": self.own_address,
+                "timestamp": time.time(),
+            }
+
+            new_message = "HB:%s:%s" % (
+                self.heartbeat_message["id"],
+                self.heartbeat_message["sender"],
+            )
+            self.socket_unicast.sendto(
+                new_message.encode(), (self.hosts.get_neighbour(), 10001)
+            )
+            logging.info("send heartbeat to %s" % self.hosts.get_neighbour())
+
+    def handle_service_announcement(self, addr):
+        if addr[0] != self.own_address:
+            self.hosts.add_host(addr[0])
+            self.hosts.form_ring(self.own_address)
+            message = "RP:%s" % self.own_address
+            self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
+
+    def handle_election_message(self, addr, parts):
+        logging.info(
+            "Got message for leader election from %s:%s" % (addr[0], self.UCAST_PORT)
+        )
+        self.election.forward_election_message(parts)
+
+    def handle_heartbeat_response(self, addr, parts):
+
+        if self.heartbeat_message:
+            if parts[1] == self.heartbeat_message["id"]:
+                logging.info("received own heartbeat from %s" % addr[0])
+                self.heartbeat_message = None
+
+    def handle_heartbeat_message(self, addr, parts):
+        logging.info("received heartbeat. respond to %s" % addr[0])
+        new_message = "HR:%s:%s" % (parts[1], parts[2])
+        self.socket_unicast.sendto(new_message.encode(), addr)

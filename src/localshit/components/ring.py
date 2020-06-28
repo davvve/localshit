@@ -26,6 +26,13 @@ class Ring:
         else:
             logging.info("Host %s was already discovered" % host)
 
+    def remove_host(self, host):
+        if host in self.members:
+            self.members.remove(host)
+            self.sorted_ring = self._form_ring(self.members)
+        else:
+            logging.info("Host %s was already removed" % host)
+
     def add_client(self, host):
         if host not in self.clients:
             self.clients.append(host)
