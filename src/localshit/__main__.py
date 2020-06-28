@@ -8,7 +8,7 @@ def main():
     frontend = "192.168.0.179"
     parser = argparse.ArgumentParser(prog="my_megazord_program")
     parser.add_argument(
-        "-p", nargs="?", help='start with localshit -f "172.17.0.2" to add frontend'
+        "-f", nargs="?", help='start with localshit -f "172.17.0.2" to add frontend'
     )
     args = parser.parse_args()
     if args.p:
