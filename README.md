@@ -8,25 +8,37 @@ Project of Lecture DBE14 Distributed Systems
 - Frederick Dehner
 - David Lüttmann
 
-## Install & run (without docker)
+## Install & run
 Install:
+
+1. Update pip: ```pip install --upgrade pip```
+2. Update setuptools: ```pip install --upgrade setuptools```
+3. Install localshit: ```pip install -e .```
+
+
+Run proxy / frontend server:
 ```
-pip install -e .
-```
-Run backend:
-```
-localshit
+proxy
 ```
 
-Run client (same for proxy):
-```
-client
-```
-
-## run backend with custom frontend / proxy server:
+Run backend server(s) with custom proxy server IP:
 ```
 localshit -p "172.17.0.2"
 ```
+
+Open client:
+```
+http://[proxy-ip]:8081/index.html
+```
+
+Run tests:
+```
+pytest tests -s
+```
+
+# Docker
+
+You can use docker to run multiple servers on one host. If you use multiple servers distributed on more than one host, use Vagrant because DOcker doesn't support bridged networks to the local area network.
 
 ## Build and run backend
 
@@ -70,19 +82,11 @@ Run docker
 docker run --rm localshit-proxy
 ```
 
-## Run tests
-```
-pytest tests -s
-```
+# Vagrant
 
-## Examples
-To run the examles within a docker container use
+Because Docker doesn't support bridged networking, we choose Vagrant containers with VirtualBox.
 
-```
-docker run -it --rm  -v "$PWD/examples":"/usr/src/widget_app" python:3 python /usr/src/widget_app/dynamicdiscover.py
-```
-
-# Set up vagrant
+## Setup
 
 1. Install VirtualBox
 2. Install Vagrant
@@ -94,10 +98,21 @@ docker run -it --rm  -v "$PWD/examples":"/usr/src/widget_app" python:3 python /u
 8. Update setuptools: ```pip3 install setuptools```
 9. Install localshit: pip3 install -e .
 10. sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1
-11. pip install --upgrade pip
-12. apt-get install python3-venv
+11. Update pip: ```pip install --upgrade pip```
+12. Update setuptools: ```pip install --upgrade setuptools```
+13. Install localshit: ```pip install -e .```
 
 ## Run Vagrant
-1. ```vagrant up```
-2. ```vagrant ssh```
-3. ```vagrant halt```
+
+
+1. Start vagrant VM: ```vagrant up```
+2. Connect to VM via ssh: ```vagrant ssh```
+3. Navigate to ```/home/vagrant/code``` and start the server with ```localshit -p "[proxy_ip]"```
+4. To stop the VM, use ```vagrant halt```
+
+# Examples
+To run the examles within a docker container use
+
+```
+docker run -it --rm  -v "$PWD/examples":"/usr/src/widget_app" python:3 python /usr/src/widget_app/dynamicdiscover.py
+```
