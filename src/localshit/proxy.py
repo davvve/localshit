@@ -55,13 +55,10 @@ class ProxyServer:
                 data, addr = socket_data.recvfrom(1024)  # wait for a packet
                 if data:
                     parts = data.decode().split(":")
-                    elif parts[0] == "LE":
+                    if parts[0] == "LE":
                         logging.info("Leader elected: %s" % parts[1])
                         self.leader_id = parts[1]
                         self.Handler.leader_ix = parts[1]
-                        self.inform_clients_about_leader(
-                            self.leader_id, self.connected_clients
-                        )
 
 
     def MakeCustomHandler(self, leader):
