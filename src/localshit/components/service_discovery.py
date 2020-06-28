@@ -73,6 +73,10 @@ class ServiceDiscovery(StoppableThread):
                         self.handle_heartbeat_message(addr, parts)
                     elif parts[0] == "RR":
                         self.handle_failure_message(addr, parts)
+                    elif parts[0] == "RP":
+                        logging.error("Reply host: %s" % parts[0])
+                        if addr[0] != self.own_address:
+                            self.hosts.add_host(addr[0])
                     else:
                         logging.error("Unknown message type: %s" % parts[0])
 
@@ -94,7 +98,8 @@ class ServiceDiscovery(StoppableThread):
             # TODO: send failure message as multicast
             logging.info("No heartbeat received")
             right_neighbour = self.hosts.get_neighbour(direction="right")
-            self.hosts.remove_host(right_neighbour)
+            if right_neighbour != self.own_address:
+                self.hosts.remove_host(right_neighbour)
 
             new_message = "RR:%s:%s" % (right_neighbour, self.own_address)
             self.socket_multicast.sendto(
@@ -102,6 +107,11 @@ class ServiceDiscovery(StoppableThread):
             )
 
             if right_neighbour == self.election.elected_leader:
+                data = "%s:%s" % ("SA", self.own_address)
+                self.socket_multicast.sendto(
+                    data.encode(), (self.MCAST_GRP, self.MCAST_PORT)
+                )
+                logging.info("service announcement...")
                 self.election.start_election()
                 self.election.wait_for_response()
 
@@ -172,5 +182,5 @@ class ServiceDiscovery(StoppableThread):
     def handle_failure_message(self, addr, parts):
         lost_host = parts[1]
 
-        if lost_host is not self.own_address:
+        if lost_host != self.own_address:
             self.hosts.remove_host(lost_host)

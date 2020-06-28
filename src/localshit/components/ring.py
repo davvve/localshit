@@ -23,6 +23,7 @@ class Ring:
     def add_host(self, host):
         if host not in self.members:
             self.members.append(host)
+            self.sorted_ring = self._form_ring(self.members)
         else:
             logging.info("Host %s was already discovered" % host)
 
