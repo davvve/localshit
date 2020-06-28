@@ -24,44 +24,47 @@ class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
 
 class ProxyServer:
     def __init__(self):
-
-        self.leader_id = "0.0.0.0"
+        WEBSERVER_PORT = 8081
+        UNICAST_PORT = 10012
         self.own_address = utils.get_host_address()
 
+        # Unicast Socket for backend server updates (leader election)
         self.socket_unicast = utils.get_unicast_socket()
-        self.socket_unicast.bind(("", 10012))
+        self.socket_unicast.bind(("", UNICAST_PORT))
 
-        PORT = 8081
-
-        self.Handler = self.MakeCustomHandler(self.leader_id)
-        self.Handler.leader_ix = self.leader_id
-        self.server = ThreadingSimpleServer(("", PORT), self.Handler)
-
-        logging.info("serving at port %s" % PORT)
+        # Start Web Server
+        self.Handler = self.MakeCustomHandler()
+        self.server = ThreadingSimpleServer(("", WEBSERVER_PORT), self.Handler)
 
         thread = threading.Thread(target=self.server.serve_forever)
         thread.daemon = True
         thread.start()
 
-        logging.info("proxy started at %s!" % self.own_address)
+        logging.info("proxy started at %s:%s!" % (self.own_address, WEBSERVER_PORT))
 
+        # Listen to backend servers for new elected leader.
+        self.listen_for_leader_elections(self.socket_unicast)
+
+    def listen_for_leader_elections(self, socket):
         while True:
-            inputready, outputready, exceptready = select.select(
-                [self.socket_unicast], [], [], 1
-            )
+            inputready, outputready, exceptready = select.select([socket], [], [], 1)
 
             for socket_data in inputready:
-
-                data, addr = socket_data.recvfrom(1024)  # wait for a packet
+                data, addr = socket_data.recvfrom(1024)
                 if data:
                     parts = data.decode().split(":")
                     if parts[0] == "LE":
                         logging.info("Leader elected: %s" % parts[1])
-                        self.leader_id = parts[1]
-                        self.Handler.leader_ix = parts[1]
+                        self.Handler.leader_id = parts[1]
 
-    def MakeCustomHandler(self, leader):
+    def MakeCustomHandler(self):
+        """
+        Helper Function to build custom Handler for web requests
+        """
+
         class MyHandler(BaseHTTPRequestHandler):
+            leader_id = "0.0.0.0"
+
             def __init__(self, *args, **kwargs):
                 super(MyHandler, self).__init__(*args, **kwargs)
 
@@ -72,14 +75,18 @@ class ProxyServer:
 
             def do_GET(self):
                 try:
-                    if self.path.endswith("leader"):
-                        json_resp = {"leader": self.leader_ix}
+                    if self.path.endswith(
+                        "leader"
+                    ):  # path returns actual leader as json
+                        json_resp = {"leader": self.leader_id}
                         json_str = json.dumps(json_resp)
                         self.send_response(200)
                         self.send_header("Content-Type", "application/json")
                         self.end_headers()
                         self.wfile.write(json_str.encode(encoding="utf_8"))
-                    elif self.path.endswith(".html"):
+                    elif self.path.endswith(
+                        ".html"
+                    ):  # returns html files, for example the index.php
                         f = open(curdir + sep + self.path, "rb")
                         self.send_response(200)
                         self.send_header("Content-type", "text/html")
