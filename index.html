@@ -1,11 +1,14 @@
 <html>
 <head>
-  <title>Simple client</title>
+  <title>Local's Hit</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
 
   <script type="text/javascript">
 
     var ws;
     var isConnected = false;
+    var counter = 0
 
     var HttpClient = function() {
         this.get = function(aUrl, aCallback) {
@@ -46,10 +49,12 @@
             message = e.data.split(":")
             if (message[0] == "CO") {
               output(message[1]);
-              console.log("onmessage: " + e.data);
+              console.log("Got message from " + leader_json.leader + " " + counter);
+              counter++;
             } else if (message[0] == "CL") {
               console.log("close connection")
               ws.close()
+              counter = 0
             }
             
           };
@@ -57,7 +62,7 @@
           ws.onclose = function() {
             if (isConnected) {
               isConnected = false
-              output("no host");
+              output("no connection. retry...");
               console.log("no host. search for new host...");
             }
             console.log("onclose");
@@ -79,25 +84,28 @@
       input.focus();
     }
     
-    function onCloseClick() {
-      ws.close();
-    }
-    
     function output(str) {
       var log = document.getElementById("log");
-      var escaped = str.replace(/&/, "&amp;").replace(/</, "&lt;").
-        replace(/>/, "&gt;").replace(/"/, "&quot;"); // "
-      log.innerHTML = log.innerHTML + "<br>" + escaped;
+      //var escaped = str.replace(/&/, "&amp;").replace(/</, "&lt;").replace(/>/, "&gt;").replace(/"/, "&quot;"); // "
+      log.innerHTML = log.innerHTML + "<br>" + str;
     }
 
   </script>
 </head>
 <body onload="init();">
-  <form onsubmit="onSubmit(); return false;">
-    <input type="text" id="input">
-    <input type="submit" value="Send">
-    <button onclick="onCloseClick(); return false;">close</button>
-  </form>
-  <div id="log"></div>
+  <main class="container">
+    <h1>Local's Hit</h1>
+    <form onsubmit="onSubmit(); return false;">
+      <input type="text" id="input">
+      <input type="submit" value="Send">
+    </form>
+    <div id="log"></div>
+  </main>
+
+
+  <!-- JS, Popper.js, and jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 </body>
 </html>
