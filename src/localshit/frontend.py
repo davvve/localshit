@@ -1,5 +1,5 @@
 """
-Main class for starting a proxy server.
+Main class for starting a frontend server.
 
 """
 import logging
@@ -22,7 +22,7 @@ class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
     pass
 
 
-class ProxyServer:
+class FrontendServer:
     def __init__(self):
         WEBSERVER_PORT = 8081
         UNICAST_PORT = 10012
@@ -40,7 +40,7 @@ class ProxyServer:
         thread.daemon = True
         thread.start()
 
-        logging.info("proxy started at %s:%s!" % (self.own_address, WEBSERVER_PORT))
+        logging.info("frontend started at %s:%s!" % (self.own_address, WEBSERVER_PORT))
 
         # Listen to backend servers for new elected leader.
         self.listen_for_leader_elections(self.socket_unicast)
@@ -106,8 +106,8 @@ class ProxyServer:
 
 def main():
     try:
-        logging.info("starting proxy...")
-        _ = ProxyServer()
+        logging.info("starting frontend...")
+        _ = FrontendServer()
     except Exception as e:
         logging.error("Error while starting app: %s" % e)
         traceback.print_exc()

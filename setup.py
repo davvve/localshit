@@ -21,6 +21,6 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     entry_points={
-        "console_scripts": ["localshit = localshit.__main__:main", "client = localshit.client:main", "proxy = localshit.proxy:main"]
+        "console_scripts": ["localshit = localshit.__main__:main", "client = localshit.client:main", "frontend = localshit.frontend:main"]
     }
 )

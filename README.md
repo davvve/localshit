@@ -16,19 +16,19 @@ Install:
 3. Install localshit: ```pip install -e .```
 
 
-Run proxy / frontend server:
+Run frontend server:
 ```
-proxy
+frontend
 ```
 
-Run backend server(s) with custom proxy server IP:
+Run backend server(s) with custom frontend server IP:
 ```
 localshit -p "172.17.0.2"
 ```
 
 Open client:
 ```
-http://[proxy-ip]:8081/index.html
+http://[frontend-ip]:8081/index.html
 ```
 
 Run tests:
@@ -73,13 +73,13 @@ docker run --rm localshit-client
 Build Docker image for backends (after every change)
 
 ```
-docker build -f Dockerfile.proxy -t localshit-proxy .
+docker build -f Dockerfile.frontend -t localshit-frontend .
 ```
 
 Run docker
 
 ```
-docker run --rm localshit-proxy
+docker run --rm localshit-frontend
 ```
 
 # Vagrant
@@ -107,7 +107,7 @@ Because Docker doesn't support bridged networking, we choose Vagrant containers 
 
 1. Start vagrant VM: ```vagrant up```
 2. Connect to VM via ssh: ```vagrant ssh```
-3. Navigate to ```/home/vagrant/code``` and start the server with ```localshit -p "[proxy_ip]"```
+3. Navigate to ```/home/vagrant/code``` and start the server with ```localshit -p "[frontend_ip]"```
 4. To stop the VM, use ```vagrant halt```
 
 # Examples
