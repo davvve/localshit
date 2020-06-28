@@ -21,7 +21,6 @@ class ContentProvider(StoppableThread):
         self.server.set_fn_new_client(self.new_client)
         self.server.set_fn_client_left(self.client_left)
         self.server.set_fn_message_received(self.message_received)
-        self.server.run_forever()
 
         logging.info("Starting ContentProvider")
 
@@ -31,6 +30,8 @@ class ContentProvider(StoppableThread):
 
     def work_func(self):
         if self.election.isLeader:
+            if self.server.isRunning is False:
+                self.server.run_forever()
             time_diff = time.time() - self.last_update
             if time_diff >= 3:
                 logging.info("publish new quote")
@@ -38,6 +39,13 @@ class ContentProvider(StoppableThread):
                 data = "%s:%s" % ("CO", quote)
                 self.server.send_message_to_all(data)
                 self.last_update = time.time()
+        else:
+            if self.server.isRunning is True:
+                logging.info("stop server...")
+                self.server.isRunning = False
+                data = "%s:%s" % ("CL", "close server")
+                self.server.send_message_to_all(data)
+                self.server.server_close()
 
     def get_quote(self, filename):
         quote = None

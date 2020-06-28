@@ -67,7 +67,9 @@ class API:
             # Exit the server thread when the main thread terminates
             server_thread.daemon = True
             server_thread.start()
+            self.isRunning = True
         except KeyboardInterrupt:
+            self.isRunning = False
             self.server_close()
             logger.info("Server terminated.")
         except Exception as e:
@@ -129,6 +131,7 @@ class WebsocketServer(ThreadingMixIn, TCPServer, API):
 
     clients = []
     id_counter = 0
+    isRunning = False
 
     def __init__(self, port, host="127.0.0.1", loglevel=logging.DEBUG):
         logger.setLevel(loglevel)

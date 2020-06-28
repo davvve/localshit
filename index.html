@@ -44,8 +44,14 @@
           ws.onmessage = function(e) {
             // e.data contains received string.
             message = e.data.split(":")
-            output(message[1]);
-            console.log("onmessage: " + e.data);
+            if (message[0] == "CO") {
+              output(message[1]);
+              console.log("onmessage: " + e.data);
+            } else if (message[0] == "CL") {
+              console.log("close connection")
+              ws.close()
+            }
+            
           };
           
           ws.onclose = function() {
