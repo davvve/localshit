@@ -65,36 +65,37 @@ class ServiceDiscovery(StoppableThread):
                     elif parts[0] == "HB":
                         # TODO: forward heartbeat
                         self.handle_heartbeat_message(addr, parts)
-                    elif parts[0] == "HR":
-                        # TODO: forward heartbeat
-                        self.handle_heartbeat_response(addr, parts)
                     else:
                         logging.error("Unknown message type: %s" % parts[0])
 
         # send heartbeat messages
-        self.heartbeat_worker(self.last_heartbeat)
+        if self.election.isLeader is True:
+            self.heartbeat_worker(self.last_heartbeat)
+        else:
+
 
     def heartbeat_worker(self, last_heartbeat):
-        time_diff = time.time() - last_heartbeat
 
+
+         # checking heartbeat
+        if self.heartbeat_message:
+            hb_age = time.time() - self.heartbeat_message["timestamp"]
+            if hb_age > 1:
+                logging.error("Ring broken!")
+                neighbour = self.hosts.get_neighbour()
+                logging.info("Ring was broken. Lost %s" % neighbour)
+                self.hosts.remove_host(neighbour)
+                logging.info("Updated view: %s" % self.hosts.members)
+                self.heartbeat_message = None
+
+                if self.election.elected_leader == neighbour:
+                    self.election.start_election()
+                    self.election.wait_for_response()
+
+        time_diff = time.time() - self.last_heartbeat
         if time_diff >= 3:
             logging.info("heartbeat...")
             self.last_heartbeat = time.time()
-
-            # checking heartbeat
-            if self.heartbeat_message:
-                hb_age = time.time() - self.heartbeat_message["timestamp"]
-                if hb_age > 1:
-                    logging.error("Ring broken!")
-                    neighbour = self.hosts.get_neighbour()
-                    logging.info("Ring was broken. Lost %s" % neighbour)
-                    self.hosts.remove_host(neighbour)
-                    logging.info("Updated view: %s" % self.hosts.members)
-                    self.heartbeat_message = None
-
-                    if self.election.elected_leader == neighbour:
-                        self.election.start_election()
-                        self.election.wait_for_response()
 
             # send new heartbeat
             self.heartbeat_message = {
@@ -125,14 +126,22 @@ class ServiceDiscovery(StoppableThread):
         )
         self.election.forward_election_message(parts)
 
-    def handle_heartbeat_response(self, addr, parts):
+    def handle_heartbeat_message(self, addr, parts):
+        # if leader, reset heartbeat message, otherwise forward it
+
+        
 
         if self.heartbeat_message:
             if parts[1] == self.heartbeat_message["id"]:
                 logging.info("received own heartbeat from %s" % addr[0])
                 self.heartbeat_message = None
+            else:
+                self.forward_heartbeat(parts, addr)
+                self.heartbeat_message = None
+        else:
+            self.forward_heartbeat(parts, addr)
 
-    def handle_heartbeat_message(self, addr, parts):
-        logging.info("received heartbeat. respond to %s" % addr[0])
-        new_message = "HR:%s:%s" % (parts[1], parts[2])
-        self.socket_unicast.sendto(new_message.encode(), addr)
+    def forward_heartbeat(self, parts, addr):
+        logging.info("received heartbeat. forward to %s" % self.hosts.get_neighbour())
+        new_message = "HB:%s:%s" % (parts[1], parts[2])
+        self.socket_unicast.sendto(new_message.encode(), (self.hosts.get_neighbour(), self.UCAST_PORT))
