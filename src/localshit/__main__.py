@@ -11,8 +11,8 @@ def main():
         "-f", nargs="?", help='start with localshit -f "172.17.0.2" to add frontend'
     )
     args = parser.parse_args()
-    if args.p:
-        frontend = args.p
+    if args.f:
+        frontend = args.f
 
     logging.info("Frontend server is set to %s" % frontend)
 
