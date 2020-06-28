@@ -23,7 +23,7 @@ frontend
 
 Run backend server(s) with custom frontend server IP:
 ```
-localshit -p "172.17.0.2"
+localshit -f "172.17.0.2"
 ```
 
 Open client:
@@ -107,7 +107,7 @@ Because Docker doesn't support bridged networking, we choose Vagrant containers 
 
 1. Start vagrant VM: ```vagrant up```
 2. Connect to VM via ssh: ```vagrant ssh```
-3. Navigate to ```/home/vagrant/code``` and start the server with ```localshit -p "[frontend_ip]"```
+3. Navigate to ```/home/vagrant/code``` and start the server with ```localshit -f "[frontend_ip]"```
 4. To stop the VM, use ```vagrant halt```
 
 # Examples
