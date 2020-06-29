@@ -10,19 +10,23 @@ logging.basicConfig(
 
 
 class Election:
-    def __init__(self, hosts, current_member_ip, frontend="172.17.0.2"):
+    def __init__(
+        self, socket_sender, hosts, current_member_ip, frontend, content_port=10012
+    ):
         # first, mark member as non-participant
+        self.participant = False
+        self.socket_sender = socket_sender
         self.hosts = hosts
         self.current_member_ip = current_member_ip
         self.frontend_address = frontend
-        self.participant = False
         self.isLeader = False
         self.got_response = False
         self.elected_leader = ""
+        self.CONTENT_PORT = content_port
 
         logging.info("Election Class initialized")
 
-    def start_election(self):
+    def start_election(self, await_response=False, timeout=1):
         logging.info("starting election")
         # mark self as a participant
         self.participant = True
@@ -31,11 +35,12 @@ class Election:
         message = "SE:%s:%s" % (self.current_member_ip, self.isLeader)
         neighbour = self.hosts.get_neighbour()
 
-        socket_unicast = utils.get_unicast_socket()
-        socket_unicast.sendto(message.encode(), (neighbour, 10001))
-        socket_unicast.close()
+        self.socket_sender.send_message(message, neighbour, type="unicast")
 
-    def wait_for_response(self):
+        if await_response is True:
+            self._wait_for_response(timeout)
+
+    def _wait_for_response(self, timeout):
         last_response = time.time()
         time_diff = 0
 
@@ -43,43 +48,30 @@ class Election:
         try:
             socket_unicast.bind(("", 10001))
         except Exception as e:
-            logging.error("Socket was already binded")
+            logging.error("Leader Election: Socket was already binded")
 
-        while time_diff <= 1:
-            try:
-                inputready, outputready, exceptready = select.select(
-                    [socket_unicast], [], [], 1
-                )
-
-                for socket_data in inputready:
-
-                    data, addr = socket_data.recvfrom(1024)
-                    if data:
-                        parts = data.decode().split(":")
-                        if parts[0] == "SE":
-                            self.got_response = True
-                            self.forward_election_message(parts)
-
-            except Exception as e:
-                logging.error("Error: %s" % e)
-
-            time_diff = time.time() - last_response
-
-        socket_unicast.close()
+        socket_unicast.settimeout(timeout)
+        try:
+            data, addr = socket_unicast.recvfrom(1024)
+            if data:
+                parts = data.decode().split(":")
+                if parts[0] == "SE":
+                    self.got_response = True
+                    self.forward_election_message(parts)
+        except:
+            logging.info("Leader Election: No response within timeout.")
 
         if self.got_response is not True:
-            logging.info("Leader Election: No response.")
             # set self as leader
             self.elected_leader = self.current_member_ip
             self.isLeader = True
             self.send_election_to_frontend()
 
     def send_election_to_frontend(self):
-        socket_unicast = utils.get_unicast_socket()
-
         new_message = "LE:%s" % self.elected_leader
-        socket_unicast.sendto(new_message.encode(), (self.frontend_address, 10012))
-        socket_unicast.close()
+        self.socket_sender.send_message(
+            new_message, self.frontend_address, port=self.CONTENT_PORT, type="unicast"
+        )
 
     def forward_election_message(self, message):
         compare = utils.compare_adresses(message[1], self.current_member_ip)
@@ -87,27 +79,23 @@ class Election:
         sender_id = message[1]
         leader_elected = eval(message[2])
 
-        socket_unicast = utils.get_unicast_socket()
-
         if leader_elected is False:
             if compare is CompareResult.LARGER:
                 # 4.1 if id is larger, forward message to next member
                 logging.info("Leader Election: Forward message as it is.")
                 self.participant = True
                 new_message = "SE:%s:%s" % (sender_id, False)
-                socket_unicast.sendto(
-                    new_message.encode(), (self.hosts.get_neighbour(), 10001)
+                self.socket_sender.send_message(
+                    new_message, self.hosts.get_neighbour(), type="unicast"
                 )
-                socket_unicast.close()
             elif compare is CompareResult.LOWER and self.participant is False:
                 # 4.2 if id is smaller and not yes marked as participant, replace id and forward message to next member.
                 self.participant = True
                 logging.info("Leader Election: Forward message with own id.")
                 new_message = "SE:%s:%s" % (self.current_member_ip, False)
-                socket_unicast.sendto(
-                    new_message.encode(), (self.hosts.get_neighbour(), 10001)
+                self.socket_sender.send_message(
+                    new_message, self.hosts.get_neighbour(), type="unicast"
                 )
-                socket_unicast.close()
             elif compare is CompareResult.LOWER and self.participant is True:
                 # 4.3 if id is smaller but already participant, then discard message
                 logging.info(
@@ -123,10 +111,9 @@ class Election:
                 self.elected_leader = self.current_member_ip
                 # start second part of algorithm, inform others about election
                 new_message = "SE:%s:%s" % (self.current_member_ip, True)
-                socket_unicast.sendto(
-                    new_message.encode(), (self.hosts.get_neighbour(), 10001)
+                self.socket_sender.send_message(
+                    new_message, self.hosts.get_neighbour(), type="unicast"
                 )
-                socket_unicast.close()
                 self.send_election_to_frontend()
             else:
                 logging.error("Leader Election: invalid result")
@@ -147,10 +134,9 @@ class Election:
                     % self.elected_leader
                 )
                 new_message = "SE:%s:%s" % (message[1], message[2])
-                socket_unicast.sendto(
-                    new_message.encode(), (self.hosts.get_neighbour(), 10001)
+                self.socket_sender.send_message(
+                    new_message, self.hosts.get_neighbour(), type="unicast"
                 )
-                socket_unicast.close()
             else:
                 logging.info(
                     "Leader Election: Election is over. Elected Leader: %s"

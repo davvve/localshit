@@ -40,9 +40,10 @@ class LocalsHitManager:
         self.hosts.form_ring(self.own_address)
 
         # start election
-        self.election = Election(self.hosts, self.own_address, frontend=frontend)
-        self.election.start_election()
-        self.election.wait_for_response()
+        self.election = Election(
+            self.socket_sender, self.hosts, self.own_address, frontend=frontend
+        )
+        self.election.start_election(await_response=True, timeout=1)
 
         self.heartbeat = Heartbeat(self.hosts, self.election, self.socket_sender)
 
