@@ -15,8 +15,8 @@ class SocketSender:
 
         self.own_address = utils.get_host_address()
 
-        # self.socket_multicast = utils.get_multicast_socket()
-        # self.socket_unicast = utils.get_unicast_socket()
+        self.socket_multicast = utils.get_multicast_socket()
+        self.socket_unicast = utils.get_unicast_socket()
 
     def send_message(self, message, address=None, port=None, type="unicast"):
 
@@ -35,9 +35,9 @@ class SocketSender:
             logging.error("No address given. Cannot send message.")
             return
 
-        socket_unicast = utils.get_unicast_socket()
-        socket_unicast.sendto(message.encode(), (address, port))
-        socket_unicast.close()
+        # socket_unicast = utils.get_unicast_socket()
+        self.socket_unicast.sendto(message.encode(), (address, port))
+        # socket_unicast.close() # darf nicht geschlossen werden, da sonst election messages nicht mehr ankommen!
 
     def _send_multicast(self, message, address, port):
         if port is None:
@@ -46,5 +46,5 @@ class SocketSender:
         if address is None:
             address = self.MCAST_GRP
 
-        socket_multicast = utils.get_multicast_socket()
-        socket_multicast.sendto(message.encode(), (address, port))
+        # socket_multicast = utils.get_multicast_socket()
+        self.socket_multicast.sendto(message.encode(), (address, port))
