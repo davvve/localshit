@@ -12,6 +12,7 @@ from localshit.components.service_announcement import ServiceAnnouncement
 from localshit.components.content_provider import ContentProvider
 from localshit.components.webserver import StatusServer  # noqa: F401
 from localshit.components.heartbeat import Heartbeat
+from localshit.utils.socket_sender import SocketSender
 from localshit.utils import utils
 
 
@@ -28,6 +29,9 @@ class LocalsHitManager:
 
         self.own_address = utils.get_host_address()
         self.hosts = Ring(self.own_address)
+
+        # init socket connections
+        self.socket_sender = SocketSender()
 
         # start service announcement
         self.service_announcement = ServiceAnnouncement(self.hosts, 10001)
