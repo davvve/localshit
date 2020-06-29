@@ -29,9 +29,9 @@ class Heartbeat:
         self.socket_unicast = utils.get_unicast_socket()
         # self.socket_unicast.bind(("0.0.0.0", 10001))
 
-    def watch_heartbeat(self, last_heartbeat_received):
+    def watch_heartbeat(self):
         # check, when was the last heartbeat from the left neighbour?
-        time_diff = time.time() - last_heartbeat_received
+        time_diff = time.time() - self.last_heartbeat_received
         if time_diff >= 6:
             failed_neighbour = self.hosts.get_neighbour(direction="right")
 
@@ -56,13 +56,9 @@ class Heartbeat:
                     self.election.start_election()
                     self.election.wait_for_response()
 
-                return time.time()
-            else:
-                return time.time()
-        else:
-            return last_heartbeat_received
+                self.last_heartbeat_received = time.time()
 
-    def heartbeat_sender(self, last_heartbeat_sent):
+    def send_heartbeat(self):
         # create heartbeat message and send it every 3 sec.
         time_diff = time.time() - self.last_heartbeat_sent
         if time_diff >= 3:
@@ -81,9 +77,7 @@ class Heartbeat:
             )
 
             logging.info("Heartbeat: send to %s" % self.hosts.get_neighbour())
-            return time.time()
-        else:
-            return last_heartbeat_sent
+            self.last_heartbeat_sent = time.time()
 
     def handle_heartbeat_message(self, addr, parts):
         # forward heartbeat message as it is, if not leader

@@ -72,7 +72,7 @@ class ServiceDiscovery(StoppableThread):
                         if parts[0] == "SA":
                             self.handle_service_announcement(addr)
                         elif parts[0] == "SE":
-                            self.handle_election_message(addr, parts)
+                            self.election.forward_election_message(parts)
                         elif parts[0] == "HB":
                             # TODO: forward heartbeat
                             self.heartbeat.handle_heartbeat_message(addr, parts)
@@ -92,14 +92,10 @@ class ServiceDiscovery(StoppableThread):
 
         # send heartbeat messages
         if self.election.isLeader is True:
-            self.heartbeat.last_heartbeat_sent = self.heartbeat.heartbeat_sender(
-                self.heartbeat.last_heartbeat_sent
-            )
+            self.heartbeat.send_heartbeat()
 
         # watch heartbeats
-        self.heartbeat.last_heartbeat_received = self.heartbeat.watch_heartbeat(
-            self.heartbeat.last_heartbeat_received
-        )
+        self.heartbeat.watch_heartbeat()
 
     def handle_service_announcement(self, addr):
         if addr[0] != self.own_address:
@@ -107,6 +103,4 @@ class ServiceDiscovery(StoppableThread):
             self.hosts.form_ring(self.own_address)
             message = "RP:%s" % self.own_address
             self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
-
-    def handle_election_message(self, addr, parts):
-        self.election.forward_election_message(parts)
+        
