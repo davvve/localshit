@@ -18,6 +18,7 @@ logging.basicConfig(
 class ServiceAnnouncement:
     def __init__(self, hosts, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
         self.hosts = hosts
+        self.UCAST_PORT = UCAST_PORT
         self.MCAST_GRP = MCAST_GRP
         self.MCAST_PORT = MCAST_PORT
 
@@ -25,7 +26,7 @@ class ServiceAnnouncement:
         self.socket_multicast = utils.get_multicast_socket()
         self.socket_unicast = utils.get_unicast_socket()
         self.socket_unicast.bind(("0.0.0.0", 10001))
-        self.own_addess = utils.get_host_address()
+        self.own_address = utils.get_host_address()
 
         # start services
         self.announce_service()
@@ -58,6 +59,14 @@ class ServiceAnnouncement:
         logging.info("service announcement finished.")
 
     def announce_service(self):
-        data = "%s:%s" % ("SA", self.own_addess)
+        data = "%s:%s" % ("SA", self.own_address)
         self.socket_multicast.sendto(data.encode(), (self.MCAST_GRP, self.MCAST_PORT))
         logging.info("service announcement...")
+
+    def handle_service_announcement(self, addr):
+        if addr[0] != self.own_address:
+            self.hosts.add_host(addr[0])
+            self.hosts.form_ring(self.own_address)
+            message = "RP:%s" % self.own_address
+            self.socket_unicast = utils.get_unicast_socket()
+            self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))

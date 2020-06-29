@@ -44,7 +44,7 @@ class LocalsHitManager:
 
         # initiate service discovery thread
         self.discovery_thread = ServiceDiscovery(
-            self.hosts, self.election, self.heartbeat
+            self.service_announcement, self.hosts, self.election, self.heartbeat
         )
         self.threads.append(self.discovery_thread)
 

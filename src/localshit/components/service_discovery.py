@@ -18,6 +18,7 @@ logging.basicConfig(
 class ServiceDiscovery(StoppableThread):
     def __init__(
         self,
+        service_announcement,
         hosts,
         election,
         heartbeat,
@@ -26,6 +27,7 @@ class ServiceDiscovery(StoppableThread):
         MCAST_PORT=5007,
     ):
         super(ServiceDiscovery, self).__init__()
+        self.service_announcement = service_announcement
         self.hosts = hosts
         self.election = election
         self.heartbeat = heartbeat
@@ -70,7 +72,7 @@ class ServiceDiscovery(StoppableThread):
                     if data:
                         parts = data.decode().split(":")
                         if parts[0] == "SA":
-                            self.handle_service_announcement(addr)
+                            self.service_announcement.handle_service_announcement(addr)
                         elif parts[0] == "SE":
                             self.election.forward_election_message(parts)
                         elif parts[0] == "HB":
@@ -97,10 +99,5 @@ class ServiceDiscovery(StoppableThread):
         # watch heartbeats
         self.heartbeat.watch_heartbeat()
 
-    def handle_service_announcement(self, addr):
-        if addr[0] != self.own_address:
-            self.hosts.add_host(addr[0])
-            self.hosts.form_ring(self.own_address)
-            message = "RP:%s" % self.own_address
-            self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
+    
         
