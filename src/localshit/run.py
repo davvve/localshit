@@ -44,7 +44,7 @@ class LocalsHitManager:
         self.election.start_election()
         self.election.wait_for_response()
 
-        self.heartbeat = Heartbeat(self.hosts, self.election)
+        self.heartbeat = Heartbeat(self.hosts, self.election, self.socket_sender)
 
         # initiate service discovery thread
         self.discovery_thread = ServiceDiscovery(

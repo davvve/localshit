@@ -9,12 +9,10 @@ logging.basicConfig(
 
 
 class Heartbeat:
-    def __init__(self, hosts, election):
+    def __init__(self, hosts, election, socket_sender):
         self.hosts = hosts
         self.election = election
-        self.UCAST_PORT = 10001
-        self.MCAST_GRP = "224.1.1.1"
-        self.MCAST_PORT = 5007
+        self.socket_sender = socket_sender
 
         self.heartbeat_message = None
         self.own_address = utils.get_host_address()
@@ -23,11 +21,6 @@ class Heartbeat:
             time.time() - 3
         )  # substract 3 sec. so that first heartbeat is sent immediately
         self.wait_for_heartbeat = False
-
-        self.socket_multicast = utils.get_multicast_socket()
-
-        self.socket_unicast = utils.get_unicast_socket()
-        # self.socket_unicast.bind(("0.0.0.0", 10001))
 
     def watch_heartbeat(self):
         # check, when was the last heartbeat from the left neighbour?
@@ -43,16 +36,12 @@ class Heartbeat:
 
                 # send failure message as multicast
                 new_message = "FF:%s:%s" % (failed_neighbour, self.own_address)
-                self.socket_multicast.sendto(
-                    new_message.encode(), (self.MCAST_GRP, self.MCAST_PORT)
-                )
+                self.socket_sender.send_message(new_message, type="multicast")
 
                 # if this was leader, then start service announcement and leader election
                 if failed_neighbour == self.election.elected_leader:
                     data = "%s:%s" % ("SA", self.own_address)
-                    self.socket_multicast.sendto(
-                        data.encode(), (self.MCAST_GRP, self.MCAST_PORT)
-                    )
+                    self.socket_sender.send_message(data, type="multicast")
                     self.election.start_election()
                     self.election.wait_for_response()
 
@@ -72,8 +61,9 @@ class Heartbeat:
                 self.heartbeat_message["id"],
                 self.heartbeat_message["sender"],
             )
-            self.socket_unicast.sendto(
-                new_message.encode(), (self.hosts.get_neighbour(), 10001)
+
+            self.socket_sender.send_message(
+                new_message, self.hosts.get_neighbour(), type="unicast"
             )
 
             logging.info("Heartbeat: send to %s" % self.hosts.get_neighbour())
@@ -90,9 +80,10 @@ class Heartbeat:
                 # forward message
                 logging.info("Heartbeat: received. forward to %s" % left_neighbour)
                 new_message = "HB:%s:%s" % (parts[1], parts[2])
-                self.socket_unicast.sendto(
-                    new_message.encode(), (left_neighbour, self.UCAST_PORT)
+                self.socket_sender.send_message(
+                    new_message, left_neighbour, type="unicast"
                 )
+
                 # note time of last heartbeat
                 self.last_heartbeat_received = time.time()
             else:
