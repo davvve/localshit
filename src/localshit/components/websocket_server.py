@@ -58,21 +58,24 @@ OPCODE_PONG = 0xA
 class API:
     def run_forever(self):
         try:
-            logger.info("Listening on port %d for clients.." % self.port)
-            # self.serve_forever()
-            _serve = self.serve_forever
+            logger.info("Content: Listening on port %d for clients.." % self.port)
             # Start a thread with the server -- that thread will then start one
             # more thread for each request
-            server_thread = threading.Thread(target=_serve)
+            self.server_thread = threading.Thread(
+                name="Websocket_Server",
+                target=self.serve_forever,
+                kwargs=dict(poll_interval=0.01),
+            )
             # Exit the server thread when the main thread terminates
-            server_thread.daemon = True
-            server_thread.start()
+            self.server_thread.daemon = True
+            self.server_thread.start()
             self.isRunning = True
         except KeyboardInterrupt:
             self.isRunning = False
             self.server_close()
             logger.info("Server terminated.")
         except Exception as e:
+            logger.error("Content: Error in starting webserver")
             logger.error(str(e), exc_info=True)
             exit(1)
 

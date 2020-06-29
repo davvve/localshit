@@ -31,18 +31,20 @@ class ContentProvider(StoppableThread):
             if self.server.isRunning is False:
                 try:
                     self.server.run_forever()
+                    self.server.isRunning = True
                 except Exception as e:
                     logging.error("Error while restarting server: %s" % e)
-            time_diff = time.time() - self.last_update
-            if time_diff >= 3:
-                logging.info("Content: publish new quote")
-                quote = self.get_quote("jokes.json")
-                data = "%s:%s" % ("CO", quote)
-                try:
-                    self.server.send_message_to_all(data)
-                except Exception as e:
-                    logging.error("Content: Error while sending quote: %s" % e)
-                self.last_update = time.time()
+            else:
+                time_diff = time.time() - self.last_update
+                if time_diff >= 3:
+                    logging.info("Content: publish new quote")
+                    quote = self.get_quote("jokes.json")
+                    data = "%s:%s" % ("CO", quote)
+                    try:
+                        self.server.send_message_to_all(data)
+                    except Exception as e:
+                        logging.error("Content: Error while sending quote: %s" % e)
+                    self.last_update = time.time()
         else:
             if self.server.isRunning is True:
                 self.server.isRunning = False

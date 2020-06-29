@@ -53,7 +53,10 @@ class ServiceDiscovery(StoppableThread):
         try:
             # listen to incoming messages on multicast, unicast and client socket
             inputready, outputready, exceptready = select(
-                [self.socket_multicast, self.socket_unicast, self.socket_content], [], [], 1
+                [self.socket_multicast, self.socket_unicast, self.socket_content],
+                [],
+                [],
+                1,
             )
 
             for socket_data in inputready:
@@ -183,11 +186,7 @@ class ServiceDiscovery(StoppableThread):
             # if leader, have a look at the message if it is from himself
             if self.heartbeat_message:
                 if parts[1] == self.heartbeat_message["id"]:
-                    duration = time.time() - self.heartbeat_message["timestamp"]
-                    logging.info(
-                        "Heartbeat: received own heartbeat from %s."
-                        % addr[0]
-                    )
+                    logging.info("Heartbeat: received own heartbeat from %s." % addr[0])
                     self.heartbeat_message = None
                     self.last_heartbeat_received = time.time()
 
