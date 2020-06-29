@@ -14,6 +14,7 @@ class Ring:
     def __init__(self, current_member_ip):
         logging.info("Ring initialized")
         self.current_member_ip = current_member_ip
+        self.add_host(self.current_member_ip)
 
     def _form_ring(self, members):
         sorted_binary_ring = sorted([socket.inet_aton(member) for member in members])

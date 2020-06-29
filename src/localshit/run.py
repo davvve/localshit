@@ -24,42 +24,41 @@ class LocalsHitManager:
     def __init__(self, frontend="172.17.0.2"):
         self.threads = []
         self.running = True
+        self.active = False
         logging.info("manager started!")
-
-        self.own_address = utils.get_host_address()
-        self.hosts = Ring(self.own_address)
 
         # init socket connections
         self.socket_sender = SocketSender()
 
-        # start service announcement
+        self.own_address = utils.get_host_address()
+
+        # init Ring
+        self.hosts = Ring(self.own_address)
+        # init service announcement object
         self.service_announcement = ServiceAnnouncement(self.hosts, self.socket_sender)
-
-        self.hosts.add_host(self.own_address)
-        self.hosts.form_ring(self.own_address)
-
-        # start election
-        self.election = Election(
-            self.socket_sender, self.hosts, self.own_address, frontend=frontend
-        )
-        self.election.start_election(await_response=True, timeout=1)
-
-        self.heartbeat = Heartbeat(self.hosts, self.election, self.socket_sender)
-
-        # initiate service discovery thread
-        self.discovery_thread = ServiceDiscovery(
-            self.service_announcement, self.hosts, self.election, self.heartbeat
-        )
-        self.threads.append(self.discovery_thread)
-
-        # initiate Content Provider
-        content_provider = ContentProvider(self.hosts, self.election)
-        self.threads.append(content_provider)
+        # init election
+        self.election = Election(self.socket_sender, self.hosts, frontend=frontend)
 
         try:
-            # start threads
-            for th in self.threads:
-                th.start()
+            self.heartbeat = Heartbeat(self.hosts, self.election, self.socket_sender)
+
+            # initiate service discovery thread
+            self.discovery_thread = ServiceDiscovery(
+                self.service_announcement, self.hosts, self.election, self.heartbeat
+            )
+            self.discovery_thread.start()
+            self.threads.append(self.discovery_thread)
+
+            # start service announcement after discovery
+            self.service_announcement.announce_service()
+
+            # start election after discovery
+            self.election.start_election(await_response=True, timeout=1)
+
+            # initiate Content Provider
+            content_provider = ContentProvider(self.hosts, self.election)
+            content_provider.start()
+            self.threads.append(content_provider)
 
             # monitor threads and exit on failing
             while self.running:

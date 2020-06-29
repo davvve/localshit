@@ -10,14 +10,12 @@ logging.basicConfig(
 
 
 class Election:
-    def __init__(
-        self, socket_sender, hosts, current_member_ip, frontend, content_port=10012
-    ):
+    def __init__(self, socket_sender, hosts, frontend, content_port=10012):
         # first, mark member as non-participant
         self.participant = False
         self.socket_sender = socket_sender
         self.hosts = hosts
-        self.current_member_ip = current_member_ip
+        self.current_member_ip = self.hosts.current_member_ip
         self.frontend_address = frontend
         self.isLeader = False
         self.got_response = False

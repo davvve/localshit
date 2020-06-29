@@ -20,16 +20,19 @@ class ServiceAnnouncement:
         self.hosts = hosts
         self.socket_sender = socket_sender
 
-        # Setup sockets
-        self.socket_unicast = utils.get_unicast_socket()
-
         self.own_address = utils.get_host_address()
 
-        # start services
-        self.announce_service()
+    def announce_service(self):
+        data = "%s:%s" % ("SA", self.own_address)
+        self.socket_sender.send_message(data, type="multicast")
+        logging.info("SA: service announcement...")
+
         self.wait_for_hosts()
 
     def wait_for_hosts(self):
+        # Setup sockets
+        self.socket_unicast = utils.get_unicast_socket()
+
         try:
             self.socket_unicast.bind(("0.0.0.0", 10001))
         except:
@@ -59,11 +62,6 @@ class ServiceAnnouncement:
 
         self.socket_unicast.close()
         logging.info("SA: service announcement finished.")
-
-    def announce_service(self):
-        data = "%s:%s" % ("SA", self.own_address)
-        self.socket_sender.send_message(data, type="multicast")
-        logging.info("SA: service announcement...")
 
     def handle_service_announcement(self, addr):
         if addr[0] != self.own_address:
