@@ -24,7 +24,7 @@ class LocalsHitManager:
     def __init__(self, frontend="172.17.0.2"):
         self.threads = []
         self.running = True
-        self.active = False
+        self.isActive = False
         logging.info("manager started!")
 
         # init socket connections
@@ -44,7 +44,7 @@ class LocalsHitManager:
 
             # initiate service discovery thread
             self.discovery_thread = ServiceDiscovery(
-                self.service_announcement, self.hosts, self.election, self.heartbeat
+                self.service_announcement, self.hosts, self.election, self.heartbeat, self.isActive
             )
             self.discovery_thread.start()
             self.threads.append(self.discovery_thread)
@@ -54,6 +54,8 @@ class LocalsHitManager:
 
             # start election after discovery
             self.election.start_election(await_response=True, timeout=1)
+
+            self.isActive = True
 
             # initiate Content Provider
             content_provider = ContentProvider(self.hosts, self.election)
@@ -77,6 +79,7 @@ class LocalsHitManager:
             traceback.print_exc()
         finally:
             # graceful shutdown
+            self.isActive = False
             logging.info("stopping threads...")
             for th in self.threads:
                 logging.info("Stopping thread %s." % th.__class__.__name__)

@@ -5,7 +5,6 @@ Adapted from https://stackoverflow.com/questions/21089268/python-service-discove
 """
 
 import time
-from select import select
 import logging
 from localshit.utils import utils
 
@@ -28,10 +27,9 @@ class ServiceAnnouncement:
         logging.info("SA: service announcement...")
 
         time.sleep(timeout)
-        
+
         logging.info("SA: service announcement finished.")
         logging.info("Discovered hosts: %s" % self.hosts.sorted_ring)
-
 
     def handle_service_announcement(self, addr):
         if addr[0] != self.own_address:

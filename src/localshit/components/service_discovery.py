@@ -1,7 +1,8 @@
 """
-Service Announcement
+Service Discovery
 
-Adapted from https://stackoverflow.com/questions/21089268/python-service-discovery-advertise-a-service-across-a-local-network
+This class works as listener to all socket connections in one place.
+It manages all incoming messages and handles it to the concerning objects.
 """
 
 from select import select
@@ -22,6 +23,7 @@ class ServiceDiscovery(StoppableThread):
         hosts,
         election,
         heartbeat,
+        isActive,
         UCAST_PORT=10001,
         MCAST_GRP="224.1.1.1",
         MCAST_PORT=5007,
@@ -31,6 +33,7 @@ class ServiceDiscovery(StoppableThread):
         self.hosts = hosts
         self.election = election
         self.heartbeat = heartbeat
+        self.isActive = isActive
 
         self.UCAST_PORT = UCAST_PORT
         self.MCAST_GRP = MCAST_GRP
@@ -38,63 +41,50 @@ class ServiceDiscovery(StoppableThread):
 
         self.socket_multicast = utils.get_multicast_socket()
         utils.bind_multicast(
-            self.socket_multicast, MCAST_GRP="224.1.1.1", MCAST_PORT=5007
+            self.socket_multicast, MCAST_GRP=self.MCAST_GRP, MCAST_PORT=self.MCAST_PORT
         )
 
         self.socket_unicast = utils.get_unicast_socket()
         self.socket_unicast.bind(("0.0.0.0", 10001))
 
-        self.socket_content = utils.get_tcp_socket()
-        self.socket_content.bind(("", 6000))
-        self.socket_content.listen(1)
-
-        self.own_address = utils.get_host_address()
-
     def work_func(self):
-        # logging.info("waiting...")
-
         try:
-            # listen to incoming messages on multicast, unicast and client socket
+            # listen to incoming messages on multicast and unicast
             inputready, outputready, exceptready = select(
-                [self.socket_multicast, self.socket_unicast, self.socket_content],
-                [],
-                [],
-                1,
+                [self.socket_multicast, self.socket_unicast], [], [], 1,
             )
 
             for socket_data in inputready:
-                if socket_data == self.socket_content:
-                    client_socket, address = self.socket_content.accept()
-                    self.hosts.add_client(client_socket)
-                    logging.info("Content: Connection from %s" % address[1])
-                else:
-                    data, addr = socket_data.recvfrom(1024)  # wait for a packet
-                    if data:
-                        parts = data.decode().split(":")
-                        if parts[0] == "SA":
-                            self.service_announcement.handle_service_announcement(addr)
-                        elif parts[0] == "SE":
-                            self.election.forward_election_message(parts)
-                        elif parts[0] == "HB":
-                            # TODO: forward heartbeat
-                            self.heartbeat.handle_heartbeat_message(addr, parts)
-                        elif parts[0] == "FF":
-                            self.heartbeat.handle_failure_message(addr, parts)
-                        elif parts[0] == "RP":
-                            logging.error("Reply from host: %s" % addr[0])
-                            if addr[0] != self.own_address:
-                                self.hosts.add_host(addr[0])
-                        else:
-                            logging.error("Unknown message type: %s" % parts[0])
+                # handle UDP socket connections
+                data, addr = socket_data.recvfrom(1024)  # wait for a packet
+                if data:
+                    parts = data.decode().split(":")
+                    if parts[0] == "SA":
+                        self.service_announcement.handle_service_announcement(addr)
+                    elif parts[0] == "SE":
+                        self.election.forward_election_message(parts)
+                    elif parts[0] == "HB":
+                        # TODO: forward heartbeat
+                        self.heartbeat.handle_heartbeat_message(addr, parts)
+                    elif parts[0] == "FF":
+                        self.heartbeat.handle_failure_message(addr, parts)
+                    elif parts[0] == "RP":
+                        logging.error("Reply from host: %s" % addr[0])
+                        if addr[0] != utils.get_host_address():
+                            self.hosts.add_host(addr[0])
+                    else:
+                        logging.error("Unknown message type: %s" % parts[0])
 
-                        # reset heartbeat beacause of leader election or service announcement
-                        self.heartbeat.last_heartbeat_received = time.time()
+                    # reset heartbeat beacause of leader election or service announcement
+                    self.heartbeat.last_heartbeat_received = time.time()
         except Exception as e:
             logging.error("Error: %s" % e)
 
-        # send heartbeat messages
-        if self.election.isLeader is True:
-            self.heartbeat.send_heartbeat()
+        # check if announcement and election is over:
+        if self.isActive is True:
+            # send heartbeat messages
+            if self.election.isLeader is True:
+                self.heartbeat.send_heartbeat()
 
-        # watch heartbeats
-        self.heartbeat.watch_heartbeat()
+            # watch heartbeats
+            self.heartbeat.watch_heartbeat()
