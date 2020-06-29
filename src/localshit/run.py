@@ -34,7 +34,7 @@ class LocalsHitManager:
         self.socket_sender = SocketSender()
 
         # start service announcement
-        self.service_announcement = ServiceAnnouncement(self.hosts, 10001)
+        self.service_announcement = ServiceAnnouncement(self.hosts, self.socket_sender)
 
         self.hosts.add_host(self.own_address)
         self.hosts.form_ring(self.own_address)

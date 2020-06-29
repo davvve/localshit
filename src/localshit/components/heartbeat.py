@@ -12,9 +12,9 @@ class Heartbeat:
     def __init__(self, hosts, election):
         self.hosts = hosts
         self.election = election
-        self.UCAST_PORT=10001
-        self.MCAST_GRP="224.1.1.1"
-        self.MCAST_PORT=5007
+        self.UCAST_PORT = 10001
+        self.MCAST_GRP = "224.1.1.1"
+        self.MCAST_PORT = 5007
 
         self.heartbeat_message = None
         self.own_address = utils.get_host_address()

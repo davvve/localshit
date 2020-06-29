@@ -98,6 +98,3 @@ class ServiceDiscovery(StoppableThread):
 
         # watch heartbeats
         self.heartbeat.watch_heartbeat()
-
-    
-        

@@ -16,16 +16,13 @@ logging.basicConfig(
 
 
 class ServiceAnnouncement:
-    def __init__(self, hosts, UCAST_PORT=10001, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
+    def __init__(self, hosts, socket_sender):
         self.hosts = hosts
-        self.UCAST_PORT = UCAST_PORT
-        self.MCAST_GRP = MCAST_GRP
-        self.MCAST_PORT = MCAST_PORT
+        self.socket_sender = socket_sender
 
         # Setup sockets
-        self.socket_multicast = utils.get_multicast_socket()
         self.socket_unicast = utils.get_unicast_socket()
-        self.socket_unicast.bind(("0.0.0.0", 10001))
+
         self.own_address = utils.get_host_address()
 
         # start services
@@ -33,6 +30,11 @@ class ServiceAnnouncement:
         self.wait_for_hosts()
 
     def wait_for_hosts(self):
+        try:
+            self.socket_unicast.bind(("0.0.0.0", 10001))
+        except:
+            logging.error("SA: Socket was already binded")
+
         last_response = time.time()
         time_diff = 0
 
@@ -56,17 +58,16 @@ class ServiceAnnouncement:
             time_diff = time.time() - last_response
 
         self.socket_unicast.close()
-        logging.info("service announcement finished.")
+        logging.info("SA: service announcement finished.")
 
     def announce_service(self):
         data = "%s:%s" % ("SA", self.own_address)
-        self.socket_multicast.sendto(data.encode(), (self.MCAST_GRP, self.MCAST_PORT))
-        logging.info("service announcement...")
+        self.socket_sender.send_message(data, type="multicast")
+        logging.info("SA: service announcement...")
 
     def handle_service_announcement(self, addr):
         if addr[0] != self.own_address:
             self.hosts.add_host(addr[0])
             self.hosts.form_ring(self.own_address)
             message = "RP:%s" % self.own_address
-            self.socket_unicast = utils.get_unicast_socket()
-            self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
+            self.socket_sender.send_message(message, addr[0], type="unicast")
