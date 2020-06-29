@@ -65,7 +65,7 @@ class Election:
         socket_unicast.close()
 
         if self.got_response is not True:
-            logging.info("no one responds to leader elections.")
+            logging.info("Leader Election: No response.")
             # set self as leader
             self.elected_leader = self.current_member_ip
             self.isLeader = True
@@ -84,12 +84,11 @@ class Election:
         leader_elected = eval(message[2])
 
         socket_unicast = utils.get_unicast_socket()
-        # TODO: check if message[2] is False, otherwise leader is elected
 
         if leader_elected is False:
             if compare is CompareResult.LARGER:
                 # 4.1 if id is larger, forward message to next member
-                logging.info("Leader Election: id is larger. Forward message.")
+                logging.info("Leader Election: Forward message as it is.")
                 self.participant = True
                 new_message = "SE:%s:%s" % (sender_id, False)
                 socket_unicast.sendto(
@@ -99,7 +98,7 @@ class Election:
                 # 4.2 if id is smaller and not yes marked as participant, replace id and forward message to next member.
                 self.participant = True
                 logging.info(
-                    "Leader Election: Sender has lower id. replace id with own id."
+                    "Leader Election: Forward message with own id."
                 )
                 new_message = "SE:%s:%s" % (self.current_member_ip, False)
                 socket_unicast.sendto(
@@ -139,7 +138,7 @@ class Election:
                 self.isLeader = False
                 self.elected_leader = sender_id
                 logging.info(
-                    "Leader Election: Election message received. note it and forward it. Elected Leader: %s"
+                    "Leader Election: Forward election message. Elected Leader: %s"
                     % self.elected_leader
                 )
                 new_message = "SE:%s:%s" % (message[1], message[2])

@@ -24,28 +24,33 @@ class ContentProvider(StoppableThread):
 
         logging.info("Starting ContentProvider")
 
-        self.isActive = True
         self.last_update = time.time()
-        self.clients = []
 
     def work_func(self):
         if self.election.isLeader:
             if self.server.isRunning is False:
-                self.server.run_forever()
+                try:
+                    self.server.run_forever()
+                except Exception as e:
+                    logging.error("Error while restarting server: %s" % e)
             time_diff = time.time() - self.last_update
             if time_diff >= 3:
-                logging.info("publish new quote")
+                logging.info("Content: publish new quote")
                 quote = self.get_quote("jokes.json")
                 data = "%s:%s" % ("CO", quote)
-                self.server.send_message_to_all(data)
+                try:
+                    self.server.send_message_to_all(data)
+                except Exception as e:
+                    logging.error("Content: Error while sending quote: %s" % e)
                 self.last_update = time.time()
         else:
             if self.server.isRunning is True:
-                logging.info("stop server...")
                 self.server.isRunning = False
                 data = "%s:%s" % ("CL", "close server")
                 self.server.send_message_to_all(data)
+                self.server.shutdown()
                 self.server.server_close()
+                logging.info("Content: publish service stopped")
 
     def get_quote(self, filename):
         quote = None
@@ -59,20 +64,20 @@ class ContentProvider(StoppableThread):
             quote = quotes[rand]
             quote = quote["joke"]
         except Exception as e:
-            logging.error("Error while starting app: %s" % e)
+            logging.error("Content: Error while starting app: %s" % e)
 
         return quote
 
     # Called for every client connecting (after handshake)
     def new_client(self, client, server):
-        print("New client connected and was given id %d" % client["id"])
+        print("Content: New client connected and was given id %d" % client["id"])
 
     # Called for every client disconnecting
     def client_left(self, client, server):
-        print("Client(%d) disconnected" % client["id"])
+        print("Content: Client(%d) disconnected" % client["id"])
 
     # Called when a client sends a message
     def message_received(self, client, server, message):
         if len(message) > 200:
             message = message[:200] + ".."
-        print("Client(%d) said: %s" % (client["id"], message))
+        print("Content: Client(%d) said: %s" % (client["id"], message))

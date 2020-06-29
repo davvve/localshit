@@ -48,77 +48,88 @@ class ServiceDiscovery(StoppableThread):
         self.wait_for_heartbeat = False
 
     def work_func(self):
-        logging.info("waiting...")
+        # logging.info("waiting...")
 
-        # listen to incoming messages on multicast, unicast and client socket
-        inputready, outputready, exceptready = select(
-            [self.socket_multicast, self.socket_unicast, self.socket_content], [], [], 1
-        )
+        try:
+            # listen to incoming messages on multicast, unicast and client socket
+            inputready, outputready, exceptready = select(
+                [self.socket_multicast, self.socket_unicast, self.socket_content], [], [], 1
+            )
 
-        for socket_data in inputready:
-            if socket_data == self.socket_content:
-                client_socket, address = self.socket_content.accept()
-                self.hosts.add_client(client_socket)
-                logging.info("Connection from %s" % address[1])
-            else:
-                data, addr = socket_data.recvfrom(1024)  # wait for a packet
-                if data:
-                    parts = data.decode().split(":")
-                    if parts[0] == "SA":
-                        self.handle_service_announcement(addr)
-                    elif parts[0] == "SE":
-                        self.handle_election_message(addr, parts)
-                    elif parts[0] == "HB":
-                        # TODO: forward heartbeat
-                        self.handle_heartbeat_message(addr, parts)
-                    elif parts[0] == "RR":
-                        self.handle_failure_message(addr, parts)
-                    elif parts[0] == "RP":
-                        logging.error("Reply host: %s" % parts[0])
-                        if addr[0] != self.own_address:
-                            self.hosts.add_host(addr[0])
-                    else:
-                        logging.error("Unknown message type: %s" % parts[0])
+            for socket_data in inputready:
+                if socket_data == self.socket_content:
+                    client_socket, address = self.socket_content.accept()
+                    self.hosts.add_client(client_socket)
+                    logging.info("Content: Connection from %s" % address[1])
+                else:
+                    data, addr = socket_data.recvfrom(1024)  # wait for a packet
+                    if data:
+                        parts = data.decode().split(":")
+                        if parts[0] == "SA":
+                            self.handle_service_announcement(addr)
+                        elif parts[0] == "SE":
+                            self.handle_election_message(addr, parts)
+                        elif parts[0] == "HB":
+                            # TODO: forward heartbeat
+                            self.handle_heartbeat_message(addr, parts)
+                        elif parts[0] == "FF":
+                            self.handle_failure_message(addr, parts)
+                        elif parts[0] == "RP":
+                            logging.error("Reply host: %s" % parts[0])
+                            if addr[0] != self.own_address:
+                                self.hosts.add_host(addr[0])
+                        else:
+                            logging.error("Unknown message type: %s" % parts[0])
 
-                    # reset heartbeat beacause of leader election or service announcement
-                    self.last_heartbeat_received = time.time()
+                        # reset heartbeat beacause of leader election or service announcement
+                        self.last_heartbeat_received = time.time()
+        except Exception as e:
+            logging.error("Error: %s" % e)
 
         # send heartbeat messages
         if self.election.isLeader is True:
-            self.heartbeat_sender()
+            self.last_heartbeat_sent = self.heartbeat_sender(self.last_heartbeat_sent)
 
         # watch heartbeats
-        self.watch_heartbeat()
+        self.last_heartbeat_received = self.watch_heartbeat(
+            self.last_heartbeat_received
+        )
 
-    def watch_heartbeat(self):
+    def watch_heartbeat(self, last_heartbeat_received):
         # check, when was the last heartbeat from the left neighbour?
-        time_diff = time.time() - self.last_heartbeat_received
+        time_diff = time.time() - last_heartbeat_received
         if time_diff >= 6:
+            failed_neighbour = self.hosts.get_neighbour(direction="right")
 
-            # TODO: send failure message as multicast
-            logging.info("No heartbeat received")
-            right_neighbour = self.hosts.get_neighbour(direction="right")
-            if right_neighbour != self.own_address:
-                self.hosts.remove_host(right_neighbour)
+            # if own address, then do nothing
+            if failed_neighbour is not self.own_address:
+                # remove failed neighbour
+                logging.info("Heartbeat: nothing received from %s" % failed_neighbour)
+                self.hosts.remove_host(failed_neighbour)
 
-            new_message = "RR:%s:%s" % (right_neighbour, self.own_address)
-            self.socket_multicast.sendto(
-                new_message.encode(), (self.MCAST_GRP, self.MCAST_PORT)
-            )
-
-            if right_neighbour == self.election.elected_leader:
-                data = "%s:%s" % ("SA", self.own_address)
+                # send failure message as multicast
+                new_message = "FF:%s:%s" % (failed_neighbour, self.own_address)
                 self.socket_multicast.sendto(
-                    data.encode(), (self.MCAST_GRP, self.MCAST_PORT)
+                    new_message.encode(), (self.MCAST_GRP, self.MCAST_PORT)
                 )
-                logging.info("service announcement...")
-                self.election.start_election()
-                self.election.wait_for_response()
 
-            self.last_heartbeat_received = time.time()
+                # if this was leader, then start service announcement and leader election
+                if failed_neighbour == self.election.elected_leader:
+                    data = "%s:%s" % ("SA", self.own_address)
+                    self.socket_multicast.sendto(
+                        data.encode(), (self.MCAST_GRP, self.MCAST_PORT)
+                    )
+                    self.election.start_election()
+                    self.election.wait_for_response()
 
-    def heartbeat_sender(self):
-        # if leader, then create heartbeat message and send it every 3 sec.
+                return time.time()
+            else:
+                return time.time()
+        else:
+            return last_heartbeat_received
+
+    def heartbeat_sender(self, last_heartbeat_sent):
+        # create heartbeat message and send it every 3 sec.
         time_diff = time.time() - self.last_heartbeat_sent
         if time_diff >= 3:
             self.heartbeat_message = {
@@ -135,8 +146,10 @@ class ServiceDiscovery(StoppableThread):
                 new_message.encode(), (self.hosts.get_neighbour(), 10001)
             )
 
-            logging.info("send heartbeat to %s" % self.hosts.get_neighbour())
-            self.last_heartbeat_sent = time.time()
+            logging.info("Heartbeat: send to %s" % self.hosts.get_neighbour())
+            return time.time()
+        else:
+            return last_heartbeat_sent
 
     def handle_service_announcement(self, addr):
         if addr[0] != self.own_address:
@@ -146,9 +159,6 @@ class ServiceDiscovery(StoppableThread):
             self.socket_unicast.sendto(message.encode(), (addr[0], self.UCAST_PORT))
 
     def handle_election_message(self, addr, parts):
-        logging.info(
-            "Got message for leader election from %s:%s" % (addr[0], self.UCAST_PORT)
-        )
         self.election.forward_election_message(parts)
 
     def handle_heartbeat_message(self, addr, parts):
@@ -157,30 +167,32 @@ class ServiceDiscovery(StoppableThread):
             # check, if the heartbeat comes from the neighbour
             left_neighbour = self.hosts.get_neighbour(direction="left")
             right_neighbour = self.hosts.get_neighbour(direction="right")
+            # cehck, if heartbeat comes from the right neighbour
             if addr[0] == right_neighbour:
                 # forward message
-                logging.info("received heartbeat. forward to %s" % left_neighbour)
+                logging.info("Heartbeat: received. forward to %s" % left_neighbour)
                 new_message = "HB:%s:%s" % (parts[1], parts[2])
                 self.socket_unicast.sendto(
                     new_message.encode(), (left_neighbour, self.UCAST_PORT)
                 )
+                # note time of last heartbeat
                 self.last_heartbeat_received = time.time()
             else:
-                logging.error("received heartbeat from wrong neighbour")
+                logging.error("Heartbeat: received from wrong neighbour")
         else:
             # if leader, have a look at the message if it is from himself
             if self.heartbeat_message:
                 if parts[1] == self.heartbeat_message["id"]:
                     duration = time.time() - self.heartbeat_message["timestamp"]
                     logging.info(
-                        "received own heartbeat from %s within %.2f sec."
-                        % (addr[0], duration)
+                        "Heartbeat: received own heartbeat from %s."
+                        % addr[0]
                     )
                     self.heartbeat_message = None
                     self.last_heartbeat_received = time.time()
 
     def handle_failure_message(self, addr, parts):
         lost_host = parts[1]
-
+        # remove failed host from list
         if lost_host != self.own_address:
             self.hosts.remove_host(lost_host)
