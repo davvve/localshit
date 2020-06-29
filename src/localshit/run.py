@@ -11,6 +11,7 @@ from localshit.components.service_discovery import ServiceDiscovery
 from localshit.components.service_announcement import ServiceAnnouncement
 from localshit.components.content_provider import ContentProvider
 from localshit.components.webserver import StatusServer  # noqa: F401
+from localshit.components.heartbeat import Heartbeat
 from localshit.utils import utils
 
 
@@ -29,7 +30,7 @@ class LocalsHitManager:
         self.hosts = Ring(self.own_address)
 
         # start service announcement
-        _ = ServiceAnnouncement(self.hosts, 10001)
+        self.service_announcement = ServiceAnnouncement(self.hosts, 10001)
 
         self.hosts.add_host(self.own_address)
         self.hosts.form_ring(self.own_address)
@@ -39,9 +40,13 @@ class LocalsHitManager:
         self.election.start_election()
         self.election.wait_for_response()
 
+        self.heartbeat = Heartbeat(self.hosts, self.election)
+
         # initiate service discovery thread
-        discovery_thread = ServiceDiscovery(self.hosts, self.election)
-        self.threads.append(discovery_thread)
+        self.discovery_thread = ServiceDiscovery(
+            self.hosts, self.election, self.heartbeat
+        )
+        self.threads.append(self.discovery_thread)
 
         # initiate Content Provider
         content_provider = ContentProvider(self.hosts, self.election)
