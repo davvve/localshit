@@ -79,7 +79,7 @@ class ServiceDiscovery(StoppableThread):
                         elif parts[0] == "FF":
                             self.heartbeat.handle_failure_message(addr, parts)
                         elif parts[0] == "RP":
-                            logging.error("Reply host: %s" % parts[0])
+                            logging.error("Reply from host: %s" % addr[0])
                             if addr[0] != self.own_address:
                                 self.hosts.add_host(addr[0])
                         else:
