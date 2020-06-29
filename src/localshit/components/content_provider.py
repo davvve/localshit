@@ -3,6 +3,7 @@ import time
 import json
 import random
 from localshit.utils.stop import StoppableThread
+from localshit.utils.config import config
 from localshit.components.websocket_server import WebsocketServer
 
 logging.basicConfig(
@@ -14,8 +15,7 @@ class ContentProvider(StoppableThread):
     def __init__(self, hosts, election):
         super(ContentProvider, self).__init__()
         self.election = election
-
-        self.server = WebsocketServer(10013, host="0.0.0.0")
+        self.server = WebsocketServer(config["content_websocket_port"], host="0.0.0.0")
         self.server.set_fn_new_client(self.new_client)
         self.server.set_fn_client_left(self.client_left)
         self.server.set_fn_message_received(self.message_received)

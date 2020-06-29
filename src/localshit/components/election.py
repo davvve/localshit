@@ -1,6 +1,7 @@
 import logging
 import time
 from localshit.utils import utils
+from localshit.utils import config
 from localshit.utils.utils import CompareResult
 
 logging.basicConfig(
@@ -9,7 +10,7 @@ logging.basicConfig(
 
 
 class Election:
-    def __init__(self, socket_sender, hosts, frontend, content_port=10012):
+    def __init__(self, socket_sender, hosts, frontend):
         # first, mark member as non-participant
         self.participant = False
         self.socket_sender = socket_sender
@@ -19,7 +20,7 @@ class Election:
         self.isLeader = False
         self.got_response = False
         self.elected_leader = ""
-        self.CONTENT_PORT = content_port
+        self.CONTENT_PORT = config.config["frontend_unicast_port"]
 
         logging.info("Election Class initialized")
 

@@ -6,6 +6,7 @@ import logging
 import traceback
 import select
 from localshit.utils import utils
+from localshit.utils.config import config
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 import threading
@@ -24,8 +25,8 @@ class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
 
 class FrontendServer:
     def __init__(self):
-        WEBSERVER_PORT = 8081
-        UNICAST_PORT = 10012
+        WEBSERVER_PORT = config["frontend_webserver_port"]
+        UNICAST_PORT = config["frontend_unicast_port"]
         self.own_address = utils.get_host_address()
 
         # Unicast Socket for backend server updates (leader election)

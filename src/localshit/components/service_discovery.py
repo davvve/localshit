@@ -10,6 +10,7 @@ from localshit.utils.stop import StoppableThread
 from localshit.utils import utils
 import logging
 import time
+from localshit.utils import config
 
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
@@ -24,9 +25,6 @@ class ServiceDiscovery(StoppableThread):
         election,
         heartbeat,
         isActive,
-        UCAST_PORT=10001,
-        MCAST_GRP="224.1.1.1",
-        MCAST_PORT=5007,
     ):
         super(ServiceDiscovery, self).__init__()
         self.service_announcement = service_announcement
@@ -35,9 +33,9 @@ class ServiceDiscovery(StoppableThread):
         self.heartbeat = heartbeat
         self.isActive = isActive
 
-        self.UCAST_PORT = UCAST_PORT
-        self.MCAST_GRP = MCAST_GRP
-        self.MCAST_PORT = MCAST_PORT
+        self.UCAST_PORT = config.config["ring_unicast_port"]
+        self.MCAST_GRP = config.config["ring_multicast_address"]
+        self.MCAST_PORT = config.config["ring_multicast_port"]
 
         self.socket_multicast = utils.get_multicast_socket()
         utils.bind_multicast(
@@ -45,9 +43,12 @@ class ServiceDiscovery(StoppableThread):
         )
 
         self.socket_unicast = utils.get_unicast_socket()
-        self.socket_unicast.bind(("0.0.0.0", 10001))
+        self.socket_unicast.bind(("0.0.0.0", self.UCAST_PORT))
 
     def work_func(self):
+        """
+        Manages all incoming messages on unicast and multicast socket
+        """
         try:
             # listen to incoming messages on multicast and unicast
             inputready, outputready, exceptready = select(

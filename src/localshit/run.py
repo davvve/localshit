@@ -13,6 +13,7 @@ from localshit.components.content_provider import ContentProvider
 from localshit.components.heartbeat import Heartbeat
 from localshit.utils.socket_sender import SocketSender
 from localshit.utils import utils
+from localshit.utils.config import config
 
 
 logging.basicConfig(
@@ -21,8 +22,12 @@ logging.basicConfig(
 
 
 class LocalsHitManager:
-    def __init__(self, frontend="172.17.0.2"):
+    def __init__(self, frontend=None):
         self.threads = []
+        if frontend is None:
+            self.frontend = config["frontend_server"]
+        else:
+            self.frontend = frontend
         self.running = True
         self.isActive = False
         logging.info("manager started!")
@@ -44,7 +49,11 @@ class LocalsHitManager:
 
             # initiate service discovery thread
             self.discovery_thread = ServiceDiscovery(
-                self.service_announcement, self.hosts, self.election, self.heartbeat, self.isActive
+                self.service_announcement,
+                self.hosts,
+                self.election,
+                self.heartbeat,
+                self.isActive,
             )
             self.discovery_thread.start()
             self.threads.append(self.discovery_thread)
