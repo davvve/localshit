@@ -10,7 +10,6 @@ from localshit.components.election import Election
 from localshit.components.service_discovery import ServiceDiscovery
 from localshit.components.service_announcement import ServiceAnnouncement
 from localshit.components.content_provider import ContentProvider
-from localshit.components.webserver import StatusServer  # noqa: F401
 from localshit.components.heartbeat import Heartbeat
 from localshit.utils.socket_sender import SocketSender
 from localshit.utils import utils
@@ -56,8 +55,6 @@ class LocalsHitManager:
         # initiate Content Provider
         content_provider = ContentProvider(self.hosts, self.election)
         self.threads.append(content_provider)
-        # optional, webserver for status
-        # _ = StatusServer(self.hosts, self.election)
 
         try:
             # start threads
