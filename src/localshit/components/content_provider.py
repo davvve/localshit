@@ -11,9 +11,7 @@ logging.basicConfig(
 
 
 class ContentProvider(StoppableThread):
-    def __init__(
-        self, hosts, election, UCAST_PORT=10001, MCAST_GRP="224.1.1.2", MCAST_PORT=5007
-    ):
+    def __init__(self, hosts, election):
         super(ContentProvider, self).__init__()
         self.election = election
 
