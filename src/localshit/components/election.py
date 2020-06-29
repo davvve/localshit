@@ -40,7 +40,10 @@ class Election:
         time_diff = 0
 
         socket_unicast = utils.get_unicast_socket()
-        socket_unicast.bind(("0.0.0.0", 10001))
+        try:
+            socket_unicast.bind(("", 10001))
+        except Exception as e:
+            logging.error("Socket was already binded")
 
         while time_diff <= 1:
             try:
@@ -76,6 +79,7 @@ class Election:
 
         new_message = "LE:%s" % self.elected_leader
         socket_unicast.sendto(new_message.encode(), (self.frontend_address, 10012))
+        socket_unicast.close()
 
     def forward_election_message(self, message):
         compare = utils.compare_adresses(message[1], self.current_member_ip)
@@ -94,16 +98,16 @@ class Election:
                 socket_unicast.sendto(
                     new_message.encode(), (self.hosts.get_neighbour(), 10001)
                 )
+                socket_unicast.close()
             elif compare is CompareResult.LOWER and self.participant is False:
                 # 4.2 if id is smaller and not yes marked as participant, replace id and forward message to next member.
                 self.participant = True
-                logging.info(
-                    "Leader Election: Forward message with own id."
-                )
+                logging.info("Leader Election: Forward message with own id.")
                 new_message = "SE:%s:%s" % (self.current_member_ip, False)
                 socket_unicast.sendto(
                     new_message.encode(), (self.hosts.get_neighbour(), 10001)
                 )
+                socket_unicast.close()
             elif compare is CompareResult.LOWER and self.participant is True:
                 # 4.3 if id is smaller but already participant, then discard message
                 logging.info(
@@ -122,6 +126,7 @@ class Election:
                 socket_unicast.sendto(
                     new_message.encode(), (self.hosts.get_neighbour(), 10001)
                 )
+                socket_unicast.close()
                 self.send_election_to_frontend()
             else:
                 logging.error("Leader Election: invalid result")
@@ -145,6 +150,7 @@ class Election:
                 socket_unicast.sendto(
                     new_message.encode(), (self.hosts.get_neighbour(), 10001)
                 )
+                socket_unicast.close()
             else:
                 logging.info(
                     "Leader Election: Election is over. Elected Leader: %s"

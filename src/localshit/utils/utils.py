@@ -47,7 +47,7 @@ def get_multicast_socket():
 
 
 def bind_multicast(socket_mcast, MCAST_GRP="224.1.1.1", MCAST_PORT=5007):
-    socket_mcast.bind((MCAST_GRP, MCAST_PORT))
+    socket_mcast.bind(("0.0.0.0", MCAST_PORT))
     mreq = struct.pack("4sl", inet_aton(MCAST_GRP), INADDR_ANY)
     socket_mcast.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq)
 
