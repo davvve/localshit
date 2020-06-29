@@ -1,5 +1,4 @@
 import logging
-import select
 import time
 from localshit.utils import utils
 from localshit.utils.utils import CompareResult
@@ -39,31 +38,17 @@ class Election:
             self._wait_for_response(timeout)
 
     def _wait_for_response(self, timeout):
+
+        # wait a leader is elected or timeout is over
         last_response = time.time()
-        time_diff = 0
-
-        socket_unicast = utils.get_unicast_socket()
-        try:
-            socket_unicast.bind(("", 10001))
-        except Exception as e:
-            logging.error("Leader Election: Socket was already binded")
-
-        socket_unicast.settimeout(timeout)
-        try:
-            data, addr = socket_unicast.recvfrom(1024)
-            if data:
-                parts = data.decode().split(":")
-                if parts[0] == "SE":
-                    self.got_response = True
-                    self.forward_election_message(parts)
-        except:
-            logging.info("Leader Election: No response within timeout.")
-
-        if self.got_response is not True:
-            # set self as leader
-            self.elected_leader = self.current_member_ip
-            self.isLeader = True
-            self.send_election_to_frontend()
+        while self.elected_leader == "":
+            if time.time() - last_response > timeout:
+                logging.info("Leader Election: No response within timeout.")
+                self.elected_leader = self.current_member_ip
+                self.isLeader = True
+                self.send_election_to_frontend()
+                break
+            time.sleep(0.1)
 
     def send_election_to_frontend(self):
         new_message = "LE:%s" % self.elected_leader
