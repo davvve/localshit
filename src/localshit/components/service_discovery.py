@@ -70,7 +70,7 @@ class ServiceDiscovery(StoppableThread):
                     if data:
                         parts = data.decode().split(":")
                         if parts[0] == "SA":
-                            self.heartbeat.handle_service_announcement(addr)
+                            self.handle_service_announcement(addr)
                         elif parts[0] == "SE":
                             self.handle_election_message(addr, parts)
                         elif parts[0] == "HB":
