@@ -1,5 +1,7 @@
 """
-Code inspired by https://github.com/daeyun/reliable-multicast-chat
+Class for handle reliable multicast and unicast. 
+
+Inspired by https://github.com/daeyun/reliable-multicast-chat
 """
 from queue import PriorityQueue
 import socket
@@ -18,9 +20,6 @@ class ReliableSocketWorker:
         self.hosts = hosts
         self.running = running
 
-        # some values missing, do we need this???
-        # self.delay_time = delay_time
-        # self.drop_rate = drop_rate
         self.my_id = self.hosts.current_member_ip
         self.message_max_size = 4096
         self.message_id_counter = 0
@@ -40,7 +39,7 @@ class ReliableSocketWorker:
         self.mutex = threading.Lock()
         self.my_timestamp = [0] * len(
             self.hosts.members
-        )  # TODO: why is len needed here?
+        )
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -60,7 +59,7 @@ class ReliableSocketWorker:
         if timestamp is None:
             timestamp = self.my_timestamp[:]
 
-        is_msg_id_specified = msg_id is not None  # TODO: maybe remove this!?
+        is_msg_id_specified = msg_id is not None
         if msg_id is None:
             msg_id = self.message_id_counter
 
@@ -81,14 +80,8 @@ class ReliableSocketWorker:
             with self.mutex:
                 self.unack_messages.append((destination, message))
 
-        # drop rate to simulate failures
-        # if random.random() <= self.drop_rate:
-        #    return
-
         dest_ip, dest_port = destination
-        send_time = (
-            time.time()
-        )  # calculate_send_time(self.delay_time) only needed to bring randomness to system
+        send_time = time.time()
         # put to queue, which sends the messages out
         self.queue.put((send_time, message, dest_ip, dest_port))
 
@@ -115,29 +108,10 @@ class ReliableSocketWorker:
             self.unicast_send(int(sender), "", message_id, True)
             # check if message was send more than once
             if (sender, message_id) not in self.has_received:
-                self.has_received[
-                    (sender, message_id)
-                ] = True  # TODO: Do we need this? has_received is only used here.
-                if (
-                    True
-                ):  # config.config['ordering'] == 'casual': # TODO: we have only causal ordering? remove others.
-                    self.holdback_queue.append((sender, message_timestamp[:], message))
-                    self.update_holdback_queue_casual()
-                    return True
-                # else:
-                #     if is_order_marker:
-                #         m_sequencer, m_sender, m_id = [int(x) for x in message.split(';')]
-                #         self.holdback_queue_markers.append((m_sender, m_id, m_sequencer))
-                #         self.update_holdback_queue_total()
-                #     else:
-                #         if self.my_id == self.SEQUENCER_ID:
-                #             marker_message = ';'.join([str(x) for x in [self.sequence_counter, sender, message_id]])
-                #             self.multicast(marker_message, is_order_marker=True)
-                #             self.sequence_counter += 1
-
-                #         self.holdback_queue.append((sender, message_id, message))
-                #         self.update_holdback_queue_total()
-                #         return True
+                self.has_received[(sender, message_id)] = True
+                self.holdback_queue.append((sender, message_timestamp[:], message))
+                self.update_holdback_queue_casual()
+                return True
         return False
 
     def update_holdback_queue_casual(self):
