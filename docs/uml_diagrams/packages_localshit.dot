@@ -1,0 +1,53 @@
+digraph "packages_localshit" {
+charset="utf-8"
+rankdir=BT
+"0" [label="localshit", shape="box"];
+"1" [label="localshit.__main__", shape="box"];
+"2" [label="localshit.components", shape="box"];
+"3" [label="localshit.components.content_provider", shape="box"];
+"4" [label="localshit.components.election", shape="box"];
+"5" [label="localshit.components.heartbeat", shape="box"];
+"6" [label="localshit.components.ring", shape="box"];
+"7" [label="localshit.components.service_announcement", shape="box"];
+"8" [label="localshit.components.service_discovery", shape="box"];
+"9" [label="localshit.components.websocket_server", shape="box"];
+"10" [label="localshit.frontend", shape="box"];
+"11" [label="localshit.run", shape="box"];
+"12" [label="localshit.utils", shape="box"];
+"13" [label="localshit.utils.config", shape="box"];
+"14" [label="localshit.utils.reliable_socket_sender", shape="box"];
+"15" [label="localshit.utils.socket_sender", shape="box"];
+"16" [label="localshit.utils.stop", shape="box"];
+"17" [label="localshit.utils.utils", shape="box"];
+"1" -> "11" [arrowhead="open", arrowtail="none"];
+"3" -> "9" [arrowhead="open", arrowtail="none"];
+"3" -> "13" [arrowhead="open", arrowtail="none"];
+"3" -> "16" [arrowhead="open", arrowtail="none"];
+"4" -> "12" [arrowhead="open", arrowtail="none"];
+"4" -> "13" [arrowhead="open", arrowtail="none"];
+"4" -> "17" [arrowhead="open", arrowtail="none"];
+"5" -> "12" [arrowhead="open", arrowtail="none"];
+"5" -> "17" [arrowhead="open", arrowtail="none"];
+"7" -> "12" [arrowhead="open", arrowtail="none"];
+"7" -> "17" [arrowhead="open", arrowtail="none"];
+"8" -> "12" [arrowhead="open", arrowtail="none"];
+"8" -> "13" [arrowhead="open", arrowtail="none"];
+"8" -> "16" [arrowhead="open", arrowtail="none"];
+"8" -> "17" [arrowhead="open", arrowtail="none"];
+"10" -> "12" [arrowhead="open", arrowtail="none"];
+"10" -> "13" [arrowhead="open", arrowtail="none"];
+"10" -> "17" [arrowhead="open", arrowtail="none"];
+"11" -> "3" [arrowhead="open", arrowtail="none"];
+"11" -> "4" [arrowhead="open", arrowtail="none"];
+"11" -> "5" [arrowhead="open", arrowtail="none"];
+"11" -> "6" [arrowhead="open", arrowtail="none"];
+"11" -> "7" [arrowhead="open", arrowtail="none"];
+"11" -> "8" [arrowhead="open", arrowtail="none"];
+"11" -> "12" [arrowhead="open", arrowtail="none"];
+"11" -> "13" [arrowhead="open", arrowtail="none"];
+"11" -> "15" [arrowhead="open", arrowtail="none"];
+"11" -> "17" [arrowhead="open", arrowtail="none"];
+"14" -> "13" [arrowhead="open", arrowtail="none"];
+"15" -> "12" [arrowhead="open", arrowtail="none"];
+"15" -> "17" [arrowhead="open", arrowtail="none"];
+}
