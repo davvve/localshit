@@ -5,6 +5,7 @@ Main class for starting a server instance.
 import time
 import logging
 import traceback
+import threading
 from localshit.components.ring import Ring
 from localshit.components.election import Election
 from localshit.components.service_discovery import ServiceDiscovery
@@ -12,6 +13,7 @@ from localshit.components.service_announcement import ServiceAnnouncement
 from localshit.components.content_provider import ContentProvider
 from localshit.components.heartbeat import Heartbeat
 from localshit.utils.socket_sender import SocketSender
+from localshit.utils.reliable_socket_sender import ReliableSocketWorker
 from localshit.utils import utils
 from localshit.utils.config import config
 
@@ -44,7 +46,13 @@ class LocalsHitManager:
         # init election
         self.election = Election(self.socket_sender, self.hosts, frontend=frontend)
 
+        # init ReliableSocketWorker
+        self.reliable_socket = ReliableSocketWorker(
+            self.running, self.hosts, port=config["reliable_socket"]
+        )
+
         try:
+            self.reliable_socket.run()
             self.heartbeat = Heartbeat(self.hosts, self.election, self.socket_sender)
 
             # initiate service discovery thread
@@ -96,4 +104,16 @@ class LocalsHitManager:
             for th in self.threads:
                 logging.info("Joining thread %s." % th.__class__.__name__)
                 th.join()
+
+            for thread in self.reliable_socket.threads:
+                logging.info("Joining Thread %s." % thread.name)
+                thread.join(0.2)
+
+            main_thread = threading.currentThread()
+            for t in threading.enumerate():
+                if t is main_thread:
+                    continue
+                logging.info("Joining Thread %s." % thread.name)
+                t.join(0.2)
+
             logging.info("threads stopped")

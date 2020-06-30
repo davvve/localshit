@@ -40,6 +40,8 @@ class ContentProvider(StoppableThread):
                     data = "%s:%s" % ("CO", quote)
                     try:
                         self.server.send_message_to_all(data)
+                        # TODO: replicate with other backend servers, save to database
+
                     except Exception as e:
                         logging.error("Content: Error while sending quote: %s" % e)
                     self.last_update = time.time()
@@ -71,6 +73,7 @@ class ContentProvider(StoppableThread):
     # Called for every client connecting (after handshake)
     def new_client(self, client, server):
         print("Content: New client connected and was given id %d" % client["id"])
+        # TODO: send last 10 updates to client
 
     # Called for every client disconnecting
     def client_left(self, client, server):
