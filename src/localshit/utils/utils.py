@@ -63,6 +63,7 @@ def get_tcp_socket():
     server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     return server_socket
 
+
 def compare_adresses(first_address, second_address):
     """
     comapares which address is the higher identifier and returns True if first is higher, otherwise false

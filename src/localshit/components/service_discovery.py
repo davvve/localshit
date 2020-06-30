@@ -19,12 +19,7 @@ logging.basicConfig(
 
 class ServiceDiscovery(StoppableThread):
     def __init__(
-        self,
-        service_announcement,
-        hosts,
-        election,
-        heartbeat,
-        isActive,
+        self, service_announcement, hosts, election, heartbeat, isActive,
     ):
         super(ServiceDiscovery, self).__init__()
         self.service_announcement = service_announcement
