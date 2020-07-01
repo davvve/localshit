@@ -75,7 +75,9 @@ class LocalsHitManager:
             self.isActive = True
 
             # initiate Content Provider
-            content_provider = ContentProvider(self.hosts, self.election)
+            content_provider = ContentProvider(
+                self.hosts, self.election, self.reliable_socket
+            )
             content_provider.start()
             self.threads.append(content_provider)
 

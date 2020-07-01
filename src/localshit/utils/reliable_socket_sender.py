@@ -1,13 +1,15 @@
 """
-Class for handle reliable multicast and unicast. 
+Class for handle reliable multicast and unicast.
 
 Inspired by https://github.com/daeyun/reliable-multicast-chat
 """
 from queue import PriorityQueue
 import socket
+import struct
 import threading
 import time
 import logging
+import json
 
 logging.basicConfig(
     level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
@@ -37,9 +39,8 @@ class ReliableSocketWorker:
 
         self.queue = PriorityQueue()
         self.mutex = threading.Lock()
-        self.my_timestamp = [0] * len(
-            self.hosts.members
-        )
+        size = len(self.hosts.members)
+        self.my_timestamp = {"192.168.0.10": 0}  # [self.ip2int("192.168.0.10")] # size
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -57,7 +58,7 @@ class ReliableSocketWorker:
     ):
         """ Push an outgoing message to the message queue. """
         if timestamp is None:
-            timestamp = self.my_timestamp[:]
+            timestamp = self.my_timestamp
 
         is_msg_id_specified = msg_id is not None
         if msg_id is None:
@@ -70,7 +71,7 @@ class ReliableSocketWorker:
                 msg_id,
                 is_ack,
                 is_order_marker,
-                self.stringify_vector_timestamp(timestamp),
+                json.dumps(timestamp),
                 message,
             ]
         )
@@ -80,7 +81,8 @@ class ReliableSocketWorker:
             with self.mutex:
                 self.unack_messages.append((destination, message))
 
-        dest_ip, dest_port = destination
+        dest_ip = destination
+        dest_port = self.port
         send_time = time.time()
         # put to queue, which sends the messages out
         self.queue.put((send_time, message, dest_ip, dest_port))
@@ -105,11 +107,11 @@ class ReliableSocketWorker:
             self.has_acknowledged[(sender, message_id)] = True
         else:
             # if normal message, send acknowledgement to the sender
-            self.unicast_send(int(sender), "", message_id, True)
+            self.unicast_send(sender, "", message_id, True)
             # check if message was send more than once
             if (sender, message_id) not in self.has_received:
                 self.has_received[(sender, message_id)] = True
-                self.holdback_queue.append((sender, message_timestamp[:], message))
+                self.holdback_queue.append((sender, message_timestamp, message))
                 self.update_holdback_queue_casual()
                 return True
         return False
@@ -124,10 +126,10 @@ class ReliableSocketWorker:
                 should_remove = True
                 for i in range(len(v)):
                     if i == sender:
-                        if v[i] != self.my_timestamp[i] + 1:
+                        if list(v)[i] != list(self.my_timestamp)[i] + 1:
                             should_remove = False
                     else:
-                        if v[i] > self.my_timestamp[i]:
+                        if list(v)[i] > list(self.my_timestamp)[i]:
                             should_remove = False
                 if not should_remove:
                     new_holdback_queue.append((sender, v, message))
@@ -165,19 +167,19 @@ class ReliableSocketWorker:
             message,
         ) = message.split(",", 5)
 
-        sender = int(sender)
+        # sender = self.ip2int(sender)
         message_id = int(message_id)
-        timestamp = self.parse_vector_timestamp(vector_str)
+        timestamp = json.loads(vector_str)
         is_ack = is_ack in ["True", "true", "1"]
         is_order_marker = is_order_marker in ["True", "true", "1"]
 
         return [sender, message_id, is_ack, is_order_marker, timestamp, message]
 
-    def parse_vector_timestamp(self, vector_str):
-        return [int(x) for x in vector_str.split(";")]
+    def ip2int(self, addr):
+        return struct.unpack("!I", socket.inet_aton(addr))[0]
 
-    def stringify_vector_timestamp(self, vector):
-        return ";".join([str(x) for x in vector])
+    def int2ip(self, addr):
+        return socket.inet_ntoa(struct.pack("!I", addr))
 
     def deliver(self, sender, message):
         """ Do something with the received message. """
@@ -228,8 +230,8 @@ class ReliableSocketWorker:
         while running:
             try:
                 self.unicast_receive()
-            except (socket.timeout, BlockingIOError) as e:
-                logging.error("Error at incoming message: %e" % e)
+            except (socket.timeout, BlockingIOError):
+                pass
 
     def run(self):
         """ Initialize and start all threads. """

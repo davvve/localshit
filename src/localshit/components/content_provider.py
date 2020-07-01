@@ -12,13 +12,16 @@ logging.basicConfig(
 
 
 class ContentProvider(StoppableThread):
-    def __init__(self, hosts, election):
+    def __init__(self, hosts, election, reliable_socket):
         super(ContentProvider, self).__init__()
         self.election = election
         self.server = WebsocketServer(config["content_websocket_port"], host="0.0.0.0")
         self.server.set_fn_new_client(self.new_client)
         self.server.set_fn_client_left(self.client_left)
         self.server.set_fn_message_received(self.message_received)
+
+        # need reliable_socket for data replication
+        self.reliable_socket = reliable_socket
 
         logging.info("Starting ContentProvider")
 
@@ -40,8 +43,7 @@ class ContentProvider(StoppableThread):
                     data = "%s:%s" % ("CO", quote)
                     try:
                         self.server.send_message_to_all(data)
-                        # TODO: replicate with other backend servers, save to database
-
+                        self.reliable_socket.multicast(quote)
                     except Exception as e:
                         logging.error("Content: Error while sending quote: %s" % e)
                     self.last_update = time.time()
