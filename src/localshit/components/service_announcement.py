@@ -5,13 +5,8 @@ Adapted from https://stackoverflow.com/questions/21089268/python-service-discove
 """
 
 import time
-import logging
 from localshit.utils import utils
-
-
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
+from localshit.utils.utils import logging
 
 
 class ServiceAnnouncement:
@@ -24,7 +19,7 @@ class ServiceAnnouncement:
     def announce_service(self, timeout=1):
         data = "%s:%s" % ("SA", self.own_address)
         self.socket_sender.send_message(data, type="multicast")
-        logging.info("SA: service announcement...")
+        logging.debug("SA: service announcement...")
 
         time.sleep(timeout)
 

@@ -1,11 +1,7 @@
-import logging
 import uuid
 import time
 from localshit.utils import utils
-
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
+from localshit.utils.utils import logging
 
 
 class Heartbeat:

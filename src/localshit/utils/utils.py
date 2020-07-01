@@ -1,6 +1,7 @@
 import logging
 import struct
 from enum import Enum
+from localshit.utils.config import config
 from socket import (
     socket,
     AF_INET,
@@ -17,9 +18,23 @@ from socket import (
     inet_aton,
 )
 
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
+
+def get_logger():
+    LEVELS = {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+        "critical": logging.CRITICAL,
+    }
+    level_name = config["loglevel"]
+    level = LEVELS.get(level_name, logging.NOTSET)
+    format = "%(asctime)s.%(msecs)03d %(threadName)-9s: %(message)s"
+    logging.basicConfig(level=level, format=format, datefmt="%H:%M:%S")
+    return logging.getLogger(__name__)
+
+
+logging = get_logger()  # noqa! F811
 
 
 def get_host_address(remote_server="google.com"):

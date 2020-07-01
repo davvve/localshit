@@ -1,10 +1,5 @@
-import logging
-import socket
 from localshit.utils import utils
-
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
+from localshit.utils.utils import logging
 
 
 class SocketSender:
@@ -35,9 +30,7 @@ class SocketSender:
             logging.error("No address given. Cannot send message.")
             return
 
-        # socket_unicast = utils.get_unicast_socket()
         self.socket_unicast.sendto(message.encode(), (address, port))
-        # socket_unicast.close() # darf nicht geschlossen werden, da sonst election messages nicht mehr ankommen!
 
     def _send_multicast(self, message, address, port):
         if port is None:
@@ -46,5 +39,4 @@ class SocketSender:
         if address is None:
             address = self.MCAST_GRP
 
-        # socket_multicast = utils.get_multicast_socket()
         self.socket_multicast.sendto(message.encode(), (address, port))

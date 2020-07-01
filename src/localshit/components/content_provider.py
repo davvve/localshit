@@ -1,14 +1,10 @@
-import logging
 import time
 import json
 import random
 from localshit.utils.stop import StoppableThread
 from localshit.utils.config import config
+from localshit.utils.utils import logging
 from localshit.components.websocket_server import WebsocketServer
-
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
 
 
 class ContentProvider(StoppableThread):
@@ -23,7 +19,7 @@ class ContentProvider(StoppableThread):
         # need reliable_socket for data replication
         self.reliable_socket = reliable_socket
 
-        logging.info("Starting ContentProvider")
+        logging.debug("Starting ContentProvider")
 
         self.last_update = time.time()
 

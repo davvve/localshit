@@ -1,12 +1,8 @@
-import logging
 import time
 from localshit.utils import utils
 from localshit.utils import config
+from localshit.utils.utils import logging
 from localshit.utils.utils import CompareResult
-
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
 
 
 class Election:

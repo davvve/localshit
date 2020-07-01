@@ -8,13 +8,9 @@ import socket
 import struct
 import threading
 import time
-import logging
 import json
 from localshit.utils import utils
-
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
+from localshit.utils.utils import logging
 
 
 class ReliableSocketWorker:
@@ -88,6 +84,7 @@ class ReliableSocketWorker:
         send_time = time.time()
         # put to queue, which sends the messages out
         self.queue.put((send_time, message, dest_ip, dest_port))
+        logging.debug("Add #%s for %s to queue" % (msg_id, dest_ip))
 
     def unicast_receive(self):
         """ Receive UDP messages from other chat processes and store them in the holdback queue.
@@ -103,9 +100,11 @@ class ReliableSocketWorker:
             message,
         ] = self.unpack_message(data)
 
+        logging.debug("Received #%s from %s" % (message_id, sender))
+
         # add sender to timestamps if not yet
         if sender not in self.my_timestamp:
-            logging.info("Added timestamp")
+            logging.debug("Added timestamp")
             self.my_timestamp[sender] = message_timestamp[sender]
 
         # check if ack message type
@@ -128,6 +127,7 @@ class ReliableSocketWorker:
         while True:
             new_holdback_queue = []
             removed_messages = []
+            logging.debug("Holdback-queue size: %s" % (len(self.holdback_queue)))
             # check with vector timestamp, if ordering is correct or some messages are missing
             for sender, v, message in self.holdback_queue:
                 should_remove = True
@@ -190,9 +190,9 @@ class ReliableSocketWorker:
         """ Do something with the received message. """
         # TODO: save message to database
         if sender != self.hosts.current_member_ip:
-            logging.info("%s says: %s" % (sender, message))
+            logging.debug("Delivered #%s from %s" % (message, sender))
         else:
-            logging.info("received own message.")
+            logging.debug("received own message.")
 
     def message_queue_handler(self, running):
         """ Thread that actually sends out messages when send time <= current_time. """
@@ -200,6 +200,7 @@ class ReliableSocketWorker:
         while running:
             (send_time, message, ip, port) = self.queue.get(block=True)
             if send_time <= time.time():
+                logging.debug("Send #%s to %s" % (message, ip))
                 self.sock.sendto(message, (ip, port))
             else:
                 self.queue.put((send_time, message, ip, port))

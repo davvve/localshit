@@ -3,7 +3,6 @@ Main class for starting a server instance.
 
 """
 import time
-import logging
 import traceback
 import threading
 from localshit.components.ring import Ring
@@ -15,12 +14,8 @@ from localshit.components.heartbeat import Heartbeat
 from localshit.utils.socket_sender import SocketSender
 from localshit.utils.reliable_socket_sender import ReliableSocketWorker
 from localshit.utils import utils
+from localshit.utils.utils import logging
 from localshit.utils.config import config
-
-
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
 
 
 class LocalsHitManager:
@@ -72,7 +67,7 @@ class LocalsHitManager:
             # start election after discovery
             self.election.start_election(await_response=True, timeout=1)
 
-            self.isActive = True
+            self.discovery_thread.isActive = True
 
             # initiate Content Provider
             content_provider = ContentProvider(
@@ -99,6 +94,7 @@ class LocalsHitManager:
         finally:
             # graceful shutdown
             self.isActive = False
+            self.discovery_thread.isActive = False
             logging.info("stopping threads...")
             for th in self.threads:
                 logging.info("Stopping thread %s." % th.__class__.__name__)

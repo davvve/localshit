@@ -1,9 +1,5 @@
 import socket
-import logging
-
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
+from localshit.utils.utils import logging
 
 
 class Ring:
@@ -12,7 +8,7 @@ class Ring:
     clients = []
 
     def __init__(self, current_member_ip):
-        logging.info("Ring initialized")
+        logging.debug("Ring initialized")
         self.current_member_ip = current_member_ip
         self.add_host(self.current_member_ip)
 
@@ -26,20 +22,20 @@ class Ring:
             self.members.append(host)
             self.sorted_ring = self._form_ring(self.members)
         else:
-            logging.info("Host %s was already discovered" % host)
+            logging.debug("Host %s was already discovered" % host)
 
     def remove_host(self, host):
         if host in self.members:
             self.members.remove(host)
             self.sorted_ring = self._form_ring(self.members)
         else:
-            logging.info("Host %s was already removed" % host)
+            logging.debug("Host %s was already removed" % host)
 
     def add_client(self, host):
         if host not in self.clients:
             self.clients.append(host)
         else:
-            logging.info("Client %s was already added" % host)
+            logging.debug("Client %s was already added" % host)
 
     def get_hosts(self):
         return self.members

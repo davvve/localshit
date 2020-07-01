@@ -1,7 +1,8 @@
-import logging
 import traceback
 import argparse
 from localshit.run import LocalsHitManager
+from localshit.utils.utils import logging
+
 import os
 
 
@@ -23,6 +24,7 @@ def main():
 
     if args.debug:
         import debugpy
+
         debugpy.listen(5678)
         print("Waiting for debugger attach: %s" % os.getpid())
         debugpy.wait_for_client()

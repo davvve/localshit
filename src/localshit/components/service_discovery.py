@@ -8,13 +8,9 @@ It manages all incoming messages and handles it to the concerning objects.
 from select import select
 from localshit.utils.stop import StoppableThread
 from localshit.utils import utils
-import logging
 import time
 from localshit.utils import config
-
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
+from localshit.utils.utils import logging
 
 
 class ServiceDiscovery(StoppableThread):
