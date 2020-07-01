@@ -11,3 +11,8 @@ localshit.egg-info/SOURCES.txt
 localshit.egg-info/top_level.txt
 distributed_systems.code-workspace
 .vagrant
+venv
+build
+requirements
+*.whl
+.vscode

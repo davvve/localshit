@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="localshit",
     version="0.0.1",
-    author="David Lüttmann, Markus Drespling, Frederick Dehner",
+    author="David Luettmann, Markus Drespling, Frederick Dehner",
     author_email="",
     description="distributed system lecture",
     long_description=long_description,
