@@ -43,9 +43,9 @@ class ContentProvider(StoppableThread):
                     data = "%s:%s" % ("CO", quote)
                     try:
                         self.server.send_message_to_all(data)
-                        self.reliable_socket.multicast(quote)
                     except Exception as e:
                         logging.error("Content: Error while sending quote: %s" % e)
+                    self.reliable_socket.multicast(quote)
                     self.last_update = time.time()
         else:
             if self.server.isRunning is True:
