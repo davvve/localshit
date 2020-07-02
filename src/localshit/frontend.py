@@ -81,6 +81,8 @@ class FrontendServer:
                         self.end_headers()
                         self.wfile.write(json_str.encode(encoding="utf_8"))
                     elif self.path.endswith(
+                        ".png"
+                    ) or self.path.endswith(
                         ".html"
                     ):  # returns html files, for example the index.php
                         f = open(curdir + sep + self.path, "rb")
