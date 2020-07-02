@@ -53,6 +53,8 @@
               console.log("close connection")
               ws.close()
               counter = 0
+            } else if (message[0] == "CR") {
+              comment(message[1], message[2]);
             }
           };
           
@@ -83,10 +85,10 @@
     
     function output(id, str) {
       var node = document.createElement('div')
-      node.innerHTML = "<div class='row mt-3'><div class='card card-body'><p>" + str + '</p>'
-        + '<div class="form-row">'
+      node.innerHTML = "<div class='row mt-3'><div class='card card-body' id='text-"+ id +"'><p>" + str + '</p>'
+        + '<div class="form-row mb-3">'
           + '<div class="col-sm-10">'
-            + '<input class="form-control" type="text" placeholder="comment" id="input-'+ id +'"">'
+            + '<input class="form-control" type="text" placeholder="comment" id="input-'+ id +'">'
           + '</div>'
           + '<div class="col-sm-2">'
             + '<button type="submit" class="btn btn-primary btn-block" id="'+ id +'" onClick="proceed(this.id)">Send</button>'
@@ -97,11 +99,18 @@
       document.getElementById("log").appendChild(node.firstChild);
     }
 
+    function comment(id, str) {
+      var text = document.getElementById("text-" + id);
+      var node = document.createElement('p')
+      node.innerHTML = "<p>&nbsp;&nbsp;&nbsp;&nbsp;>> " + str + "</p>"
+      text.appendChild(node.firstChild);
+    }
+
 
     function proceed(id) {
       var input = document.getElementById("input-" + id);
       var message = "CR:"+id+":"+input.value // CR = Client Reply
-      // ws.send(message);
+      ws.send(message);
       console.log("send: " + message);
       input.value = "";
       input.focus();

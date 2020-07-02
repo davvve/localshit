@@ -93,9 +93,14 @@ class ContentProvider(StoppableThread):
 
     # Called when a client sends a message
     def message_received(self, client, server, message):
-        if len(message) > 200:
-            message = message[:200] + ".."
-        print("Content: Client(%d) said: %s" % (client["id"], message))
+        logging.info("Content: Client(%d) said: %s" % (client["id"], message))
+
+        parts = message.split(":")
+        if parts[0] == "CR":
+            parts[2] = "%s - %s" % (client["id"], parts[2])
+            new_message = "%s:%s:%s" % (parts[0], parts[1], parts[2])
+            self.server.send_message_to_all(new_message)
+
 
     def multicast_delivered(self, sender, message):
         logging.debug("Delivered #%s from %s" % (message, sender))
