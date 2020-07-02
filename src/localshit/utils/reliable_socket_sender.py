@@ -186,14 +186,6 @@ class ReliableSocketWorker:
     def int2ip(self, addr):
         return socket.inet_ntoa(struct.pack("!I", addr))
 
-    def deliver(self, sender, message):
-        """ Do something with the received message. """
-        # TODO: save message to database
-        if sender != self.hosts.current_member_ip:
-            logging.debug("Delivered #%s from %s" % (message, sender))
-        else:
-            logging.debug("received own message.")
-
     def message_queue_handler(self, running):
         """ Thread that actually sends out messages when send time <= current_time. """
         # TODO: if we have removed randomness in sending messages, can we simplify this?
@@ -234,6 +226,21 @@ class ReliableSocketWorker:
                 self.unicast_receive()
             except (socket.timeout, BlockingIOError):
                 pass
+
+    def deliver(self, sender, message):
+        """ Do something with the received message. """
+        # TODO: save message to database
+        if sender != self.hosts.current_member_ip:
+            self.multicast_delivered(sender, message)
+        else:
+            logging.debug("received own message.")
+            self.multicast_delivered(sender, message)
+
+    def multicast_delivered(self, sender, message):
+        pass
+
+    def set_fn_delivered(self, fn):
+        self.multicast_delivered = fn
 
     def run(self):
         """ Initialize and start all threads. """

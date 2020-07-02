@@ -20,6 +20,7 @@ class ContentProvider(StoppableThread):
 
         # need reliable_socket for data replication
         self.reliable_socket = reliable_socket
+        self.reliable_socket.set_fn_delivered(self.multicast_delivered)
 
         logging.debug("Starting ContentProvider")
 
@@ -46,7 +47,7 @@ class ContentProvider(StoppableThread):
                         logging.error("Content: Error while sending quote: %s" % e)
                         return
                     # 2. save to database
-                    self.database.insert(data)
+                    # self.database.insert(data)
                     # 3. replicate with other backend servers
                     self.reliable_socket.multicast(data)
 
@@ -93,3 +94,7 @@ class ContentProvider(StoppableThread):
         if len(message) > 200:
             message = message[:200] + ".."
         print("Content: Client(%d) said: %s" % (client["id"], message))
+
+    def multicast_delivered(self, sender, message):
+        logging.debug("Delivered #%s from %s" % (message, sender))
+        self.database.insert(message)
