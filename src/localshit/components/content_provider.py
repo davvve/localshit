@@ -25,7 +25,7 @@ class ContentProvider(StoppableThread):
 
         logging.debug("Starting ContentProvider")
 
-        data = "%s:%s" % ("AA", id, self.election.current_member_ip)
+        data = "%s:%s" % ("AA", self.election.current_member_ip)
                         
         # 1. replicate with other backend servers and itself to store quote to database
         try:
