@@ -47,10 +47,12 @@ class ContentProvider(StoppableThread):
                     except Exception as e:
                         logging.error("Content: Error while sending quote: %s" % e)
                         return
-                    # 2. save to database
-                    # self.database.insert(data)
-                    # 3. replicate with other backend servers
-                    self.reliable_socket.multicast(data)
+                    # 2. replicate with other backend servers and itself to store quote to database
+                    try:
+                        self.reliable_socket.multicast(data)
+                    except Exception as e:
+                        logging.error("Content: Error while saving quote: %s" % e)
+                        return
 
                     self.last_update = time.time()
         else:
@@ -75,7 +77,6 @@ class ContentProvider(StoppableThread):
             quote = quotes[rand]
             quote = quote["joke"]
             quote_id = uuid.uuid4()
-            # self.quote_id += 1
         except Exception as e:
             logging.error("Content: Error while generating quote: %s" % e)
 
