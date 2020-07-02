@@ -2,21 +2,17 @@
 Main class for starting a frontend server.
 
 """
-import logging
 import traceback
 import select
 from localshit.utils import utils
 from localshit.utils.config import config
+from localshit.utils.utils import logging
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 import threading
 from os import curdir, sep
 import json
 
-
-logging.basicConfig(
-    level=logging.DEBUG, format="(%(threadName)-9s) %(message)s",
-)
 
 
 class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
