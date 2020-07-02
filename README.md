@@ -110,6 +110,7 @@ docker run --rm localshit-frontend
 | LE | IP address of current leader | - | notifies frontend server about current leader |
 | CO | content | - | Content messages - send to clients |
 | CL | message | - | Notify clients that websocket of backend server is shutting down |
+| CR | comment | - | Message type for comments on quotes from the client |
 
 # Vagrant
 
