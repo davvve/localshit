@@ -2,24 +2,28 @@ digraph "classes_localshit" {
 charset="utf-8"
 rankdir=BT
 "0" [label="{API|client_left\lisRunning : bool\lmessage_received\lnew_client\lserver_thread : Thread\l|client_left(client, server)\lmessage_received(client, server, message)\lnew_client(client, server)\lrun_forever()\lsend_message(client, msg)\lsend_message_to_all(msg)\lset_fn_client_left(fn)\lset_fn_message_received(fn)\lset_fn_new_client(fn)\l}", shape="record"];
-"2" [label="{ContentProvider|election\llast_update\lserver\l|client_left(client, server)\lget_quote(filename)\lmessage_received(client, server, message)\lnew_client(client, server)\lwork_func()\l}", shape="record"];
-"3" [label="{Election|CONTENT_PORT : int\lcurrent_member_ip\lelected_leader : str\lfrontend_address\lgot_response : bool\lhosts\lisLeader : bool\lparticipant : bool\lsocket_sender\l|forward_election_message(message)\lsend_election_to_frontend()\lstart_election(await_response, timeout)\l}", shape="record"];
-"5" [label="{Heartbeat|election\lheartbeat_message : dict, NoneType\lhosts\llast_heartbeat_received\llast_heartbeat_sent\lown_address\lsocket_sender\lwait_for_heartbeat : bool\l|handle_failure_message(addr, parts)\lhandle_heartbeat_message(addr, parts)\lsend_heartbeat()\lwatch_heartbeat()\l}", shape="record"];
-"6" [label="{LocalsHitManager|discovery_thread\lelection\lfrontend : NoneType, str\lheartbeat\lhosts\lisActive : bool\lown_address\lrunning : bool\lservice_announcement\lsocket_sender\lthreads : list\l|}", shape="record"];
-"9" [label="{Ring|clients : list\lcurrent_member_ip\lmembers : list\lsorted_ring\lsorted_ring : list\l|add_client(host)\ladd_host(host)\lform_ring(own_ip)\lget_hosts()\lget_neighbour(direction)\lremove_host(host)\l}", shape="record"];
-"10" [label="{ServiceAnnouncement|hosts\lown_address\lsocket_sender\l|announce_service(timeout)\lhandle_service_announcement(addr)\l}", shape="record"];
-"11" [label="{ServiceDiscovery|MCAST_GRP : str\lMCAST_PORT : int\lUCAST_PORT : int\lelection\lheartbeat\lhosts\lisActive\lservice_announcement\lsocket_multicast : socket\lsocket_unicast : socket\l|work_func()\l}", shape="record"];
-"12" [label="{SocketSender|MCAST_GRP : str\lMCAST_PORT : int\lUCAST_PORT : int\lown_address\lsocket_multicast : socket\lsocket_unicast : socket\l|send_message(message, address, port, type)\l}", shape="record"];
-"13" [label="{StoppableThread|\l|clean_up()\lrun()\lsetup()\lstop()\lstopped()\lwork_func()\l}", shape="record"];
-"16" [label="{WebsocketServer|allow_reuse_address : bool\lclients : list\ldaemon_threads : bool\lid_counter\lid_counter : int\lisRunning : bool\lisRunning : bool\lport\l|handler_to_client(handler)\l}", shape="record"];
-"2" -> "13" [arrowhead="empty", arrowtail="none"];
-"11" -> "13" [arrowhead="empty", arrowtail="none"];
-"16" -> "0" [arrowhead="empty", arrowtail="none"];
-"3" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="election", style="solid"];
-"5" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="heartbeat", style="solid"];
-"9" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="hosts", style="solid"];
-"10" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="service_announcement", style="solid"];
-"11" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="discovery_thread", style="solid"];
-"12" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="socket_sender", style="solid"];
-"16" -> "2" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="server", style="solid"];
+"2" [label="{ContentProvider|database\lelection\llast_update\lquote_id : UUID\lreliable_socket\lserver\l|client_left(client, server)\lget_quote(filename)\lmessage_received(client, server, message)\lmulticast_delivered(sender, message)\lnew_client(client, server)\lwork_func()\l}", shape="record"];
+"3" [label="{Database|database : list\l|count()\ldelete(item)\lget(id)\lget_at_position(index)\lget_range(start, end)\linsert(item)\lupdate(item)\l}", shape="record"];
+"4" [label="{Election|CONTENT_PORT : int\lcurrent_member_ip\lelected_leader : str\lfrontend_address\lgot_response : bool\lhosts\lisLeader : bool\lparticipant : bool\lsocket_sender\l|forward_election_message(message)\lsend_election_to_frontend()\lstart_election(await_response, timeout)\l}", shape="record"];
+"6" [label="{Heartbeat|election\lheartbeat_message : dict, NoneType\lhosts\llast_heartbeat_received\llast_heartbeat_sent\lown_address\lsocket_sender\lwait_for_heartbeat : bool\l|handle_failure_message(addr, parts)\lhandle_heartbeat_message(addr, parts)\lsend_heartbeat()\lwatch_heartbeat()\l}", shape="record"];
+"7" [label="{LocalsHitManager|database\ldiscovery_thread\lelection\lfrontend : str, NoneType\lheartbeat\lhosts\lisActive : bool\lown_address\lreliable_socket\lrunning : bool\lservice_announcement\lsocket_sender\lthreads : list\l|}", shape="record"];
+"9" [label="{ReliableSocketWorker|SEQUENCER_ID : int\lhas_acknowledged : dict\lhas_received : dict\lholdback_queue : list\lholdback_sequence_counter : int\lhosts\lmessage_id_counter : int\lmessage_max_size : int\lmulticast_delivered\lmutex : lock\lmy_id\lmy_timestamp : dict\lport : int\lqueue : PriorityQueue\lrunning\lsequence_counter : int\lsock : socket\lthreads : list\lunack_messages : list\l|ack_handler(running)\ldeliver(sender, message)\lincoming_message_handler(running)\lint2ip(addr)\lip2int(addr)\lmessage_queue_handler(running)\lmulticast(message)\lmulticast_delivered(sender, message)\lpack_message(message_list)\lrun()\lset_fn_delivered(fn)\lunicast_receive()\lunicast_send(destination, message, msg_id, is_ack, timestamp)\lunpack_message(message)\lupdate_holdback_queue_casual()\l}", shape="record"];
+"10" [label="{Ring|clients : list\lcurrent_member_ip\lmembers : list\lsorted_ring\lsorted_ring : list\l|add_client(host)\ladd_host(host)\lform_ring(own_ip)\lget_hosts()\lget_neighbour(direction)\lremove_host(host)\l}", shape="record"];
+"11" [label="{ServiceAnnouncement|hosts\lown_address\lsocket_sender\l|announce_service(timeout)\lhandle_service_announcement(addr)\l}", shape="record"];
+"12" [label="{ServiceDiscovery|MCAST_GRP : str\lMCAST_PORT : int\lUCAST_PORT : int\lelection\lheartbeat\lhosts\lisActive : bool\lservice_announcement\lsocket_multicast : socket\lsocket_unicast : socket\l|work_func()\l}", shape="record"];
+"13" [label="{SocketSender|MCAST_GRP : str\lMCAST_PORT : int\lUCAST_PORT : int\lown_address\lsocket_multicast : socket\lsocket_unicast : socket\l|send_message(message, address, port, type)\l}", shape="record"];
+"14" [label="{StoppableThread|\l|clean_up()\lrun()\lsetup()\lstop()\lstopped()\lwork_func()\l}", shape="record"];
+"17" [label="{WebsocketServer|allow_reuse_address : bool\lclients : list\ldaemon_threads : bool\lid_counter\lid_counter : int\lisRunning : bool\lisRunning : bool\lport\l|handler_to_client(handler)\l}", shape="record"];
+"2" -> "14" [arrowhead="empty", arrowtail="none"];
+"12" -> "14" [arrowhead="empty", arrowtail="none"];
+"17" -> "0" [arrowhead="empty", arrowtail="none"];
+"3" -> "7" [arrowhead="diamond", arrowtail="none", fontcolor="grey", label="database", style="solid"];
+"4" -> "7" [arrowhead="diamond", arrowtail="none", fontcolor="grey", label="election", style="solid"];
+"6" -> "7" [arrowhead="diamond", arrowtail="none", fontcolor="grey", label="heartbeat", style="solid"];
+"9" -> "7" [arrowhead="diamond", arrowtail="none", fontcolor="grey", label="reliable_socket", style="solid"];
+"10" -> "7" [arrowhead="diamond", arrowtail="none", fontcolor="grey", label="hosts", style="solid"];
+"11" -> "7" [arrowhead="diamond", arrowtail="none", fontcolor="grey", label="service_announcement", style="solid"];
+"12" -> "7" [arrowhead="diamond", arrowtail="none", fontcolor="grey", label="discovery_thread", style="solid"];
+"13" -> "7" [arrowhead="diamond", arrowtail="none", fontcolor="grey", label="socket_sender", style="solid"];
+"17" -> "2" [arrowhead="diamond", arrowtail="none", fontcolor="grey", label="server", style="solid"];
 }
