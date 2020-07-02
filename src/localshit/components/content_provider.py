@@ -1,6 +1,7 @@
 import time
 import json
 import random
+import uuid
 from localshit.utils.stop import StoppableThread
 from localshit.utils.config import config
 from localshit.utils.utils import logging
@@ -16,7 +17,7 @@ class ContentProvider(StoppableThread):
         self.server.set_fn_new_client(self.new_client)
         self.server.set_fn_client_left(self.client_left)
         self.server.set_fn_message_received(self.message_received)
-        self.quote_id = 0
+        self.quote_id = uuid.uuid4()
 
         # need reliable_socket for data replication
         self.reliable_socket = reliable_socket
@@ -73,8 +74,8 @@ class ContentProvider(StoppableThread):
             rand = random.randint(0, counts - 1)
             quote = quotes[rand]
             quote = quote["joke"]
-            quote_id = self.quote_id
-            self.quote_id += 1
+            quote_id = uuid.uuid4()
+            # self.quote_id += 1
         except Exception as e:
             logging.error("Content: Error while generating quote: %s" % e)
 
