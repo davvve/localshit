@@ -11,7 +11,10 @@ config = {
     "frontend_unicast_port": 10012,
     "frontend_webserver_port": 8081,
     "reliable_socket": 10033,
-    "loglevel": "info",
+    "loglevel": "debug",
     "chuck_norris": True,
     "quote_intervall": 5,
+    "announcement_timeout": 2,
+    "heartbeat_intervall": 1,
+    "heartbeat_timeout": 3,
 }

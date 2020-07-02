@@ -2,6 +2,7 @@ import uuid
 import time
 from localshit.utils import utils
 from localshit.utils.utils import logging
+from localshit.utils.config import config
 
 
 class Heartbeat:
@@ -14,14 +15,14 @@ class Heartbeat:
         self.own_address = utils.get_host_address()
         self.last_heartbeat_received = time.time()
         self.last_heartbeat_sent = (
-            time.time() - 3
+            time.time() - config["heartbeat_intervall"]
         )  # substract 3 sec. so that first heartbeat is sent immediately
         self.wait_for_heartbeat = False
 
     def watch_heartbeat(self):
         # check, when was the last heartbeat from the left neighbour?
         time_diff = time.time() - self.last_heartbeat_received
-        if time_diff >= 6:
+        if time_diff >= config["heartbeat_timeout"]:
             failed_neighbour = self.hosts.get_neighbour(direction="right")
 
             # if own address, then do nothing
@@ -45,7 +46,7 @@ class Heartbeat:
     def send_heartbeat(self):
         # create heartbeat message and send it every 3 sec.
         time_diff = time.time() - self.last_heartbeat_sent
-        if time_diff >= 3:
+        if time_diff >= config["heartbeat_intervall"]:
             self.heartbeat_message = {
                 "id": str(uuid.uuid4()),
                 "sender": self.own_address,

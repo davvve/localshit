@@ -65,7 +65,7 @@ class LocalsHitManager:
             self.threads.append(self.discovery_thread)
 
             # start service announcement after discovery
-            self.service_announcement.announce_service(timeout=1)
+            self.service_announcement.announce_service(timeout=config["announcement_timeout"])
 
             # start election after discovery
             self.election.start_election(await_response=True, timeout=1)
