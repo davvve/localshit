@@ -11,6 +11,7 @@ from localshit.components.service_discovery import ServiceDiscovery
 from localshit.components.service_announcement import ServiceAnnouncement
 from localshit.components.content_provider import ContentProvider
 from localshit.components.heartbeat import Heartbeat
+from localshit.components.database_provider import Database
 from localshit.utils.socket_sender import SocketSender
 from localshit.utils.reliable_socket_sender import ReliableSocketWorker
 from localshit.utils import utils
@@ -40,6 +41,8 @@ class LocalsHitManager:
         self.service_announcement = ServiceAnnouncement(self.hosts, self.socket_sender)
         # init election
         self.election = Election(self.socket_sender, self.hosts, frontend=frontend)
+        # init database
+        self.database = Database()
 
         # init ReliableSocketWorker
         self.reliable_socket = ReliableSocketWorker(
@@ -71,7 +74,7 @@ class LocalsHitManager:
 
             # initiate Content Provider
             content_provider = ContentProvider(
-                self.hosts, self.election, self.reliable_socket
+                self.election, self.reliable_socket, self.database
             )
             content_provider.start()
             self.threads.append(content_provider)

@@ -8,9 +8,10 @@ from localshit.components.websocket_server import WebsocketServer
 
 
 class ContentProvider(StoppableThread):
-    def __init__(self, hosts, election, reliable_socket):
+    def __init__(self, election, reliable_socket, database):
         super(ContentProvider, self).__init__()
         self.election = election
+        self.database = database
         self.server = WebsocketServer(config["content_websocket_port"], host="0.0.0.0")
         self.server.set_fn_new_client(self.new_client)
         self.server.set_fn_client_left(self.client_left)
@@ -38,11 +39,17 @@ class ContentProvider(StoppableThread):
                     logging.info("Content: publish new quote")
                     id, quote = self.get_quote("jokes.json")
                     data = "%s:%s:%s" % ("CO", id, quote)
+                    # 1. Send message to client
                     try:
                         self.server.send_message_to_all(data)
                     except Exception as e:
                         logging.error("Content: Error while sending quote: %s" % e)
-                    self.reliable_socket.multicast(quote)
+                        return
+                    # 2. save to database
+                    self.database.insert(data)
+                    # 3. replicate with other backend servers
+                    self.reliable_socket.multicast(data)
+
                     self.last_update = time.time()
         else:
             if self.server.isRunning is True:
