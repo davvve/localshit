@@ -15,6 +15,6 @@ config = {
     "chuck_norris": False,
     "quote_intervall": 20,
     "announcement_timeout": 2,
-    "heartbeat_intervall": 1,
-    "heartbeat_timeout": 3,
+    "heartbeat_intervall": 3,
+    "heartbeat_timeout": 6,
 }
