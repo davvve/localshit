@@ -39,7 +39,8 @@ class Heartbeat:
                 if failed_neighbour == self.election.elected_leader:
                     data = "%s:%s" % ("SA", self.own_address)
                     self.socket_sender.send_message(data, type="multicast")
-                    self.election.start_election(await_response=False)
+                    time.sleep(1)
+                    self.election.start_election(await_response=True)
 
             self.last_heartbeat_received = time.time()
 
