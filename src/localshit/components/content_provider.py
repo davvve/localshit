@@ -103,6 +103,21 @@ class ContentProvider(StoppableThread):
             parts[2] = "%s - %s" % (client["id"], parts[2])
             new_message = "%s:%s:%s" % (parts[0], parts[1], parts[2])
             self.server.send_message_to_all(new_message)
+        elif parts[0] == "CO":
+            quote_id = uuid.uuid4()
+            data = "%s:%s:%s" % ("CO", quote_id, parts[1])
+            # 1. replicate with other backend servers and itself to store quote to database
+            try:
+                self.reliable_socket.multicast(data)
+            except Exception as e:
+                logging.error("Content: Error while saving quote: %s" % e)
+                return
+            # 2. Send message to client
+            try:
+                self.server.send_message_to_all(data)
+            except Exception as e:
+                logging.error("Content: Error while sending quote: %s" % e)
+                return
 
 
     def multicast_delivered(self, sender, message):
