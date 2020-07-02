@@ -84,6 +84,8 @@ class FrontendServer:
                         ".png"
                     ) or self.path.endswith(
                         ".html"
+                    ) or self.path.endswith(
+                        ".ico"
                     ):  # returns html files, for example the index.php
                         f = open(curdir + sep + self.path, "rb")
                         self.send_response(200)
