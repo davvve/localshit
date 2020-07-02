@@ -14,7 +14,7 @@ config = {
     "loglevel": "debug",
     "chuck_norris": False,
     "quote_intervall": 20,
-    "announcement_timeout": 2,
-    "heartbeat_intervall": 3,
+    "announcement_timeout": 1,
+    "heartbeat_intervall": 2,
     "heartbeat_timeout": 6,
 }
