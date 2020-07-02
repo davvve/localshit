@@ -14,7 +14,6 @@ from os import curdir, sep
 import json
 
 
-
 class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
     pass
 

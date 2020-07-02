@@ -100,16 +100,16 @@ docker run --rm localshit-frontend
 
 ## Message Types
 
-| Type   | Parameter 1   | Parameter 2   | Description   |
-| -- | :--| :-- | :-- | --: |
-| SA | IP address | - | Service announcement - announce backend service to multicast
-| SE | leader candidate IP | isLeader (True/False) | Start election - election messages in the ring
-| HB | heartbeat GUID | - | Heartbeat messages
-| FF | IP address of failed node | - | Failure message when heartbeat fails 
-| RP | IP address | - | Reply to sender of service announcement with own IP address
-| LE | IP address of current leader | - | notifies frontend server about current leader
-| CO | content | - | Content messages - send to clients
-| CL | message | - | Notify clients that websocket of backend server is shutting down
+| Type | Parameter 1 | Parameter 2 | Description |
+| --- | :--- | :--- | :--- |
+| SA | IP address | - | Service announcement - announce backend service to multicast |
+| SE | leader candidate IP | isLeader (True/False) | Start election - election messages in the ring |
+| HB | heartbeat GUID | - | Heartbeat messages |
+| FF | IP address of failed node | - | Failure message when heartbeat fails |
+| RP | IP address | - | Reply to sender of service announcement with own IP address |
+| LE | IP address of current leader | - | notifies frontend server about current leader |
+| CO | content | - | Content messages - send to clients |
+| CL | message | - | Notify clients that websocket of backend server is shutting down |
 
 # Vagrant
 
