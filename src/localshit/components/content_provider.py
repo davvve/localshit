@@ -131,10 +131,10 @@ class ContentProvider(StoppableThread):
 
     def multicast_delivered(self, sender, message):
         parts = message.split(":")
-        if parts[0] == "AA":
+        if parts[0] == "AA" and self.election.isLeader:
             data_set = self.database.get_range(start=-20)
             for msg in data_set:
-                self.reliable_socket.multicast(msg)
+                self.reliable_socket.unicast_send(sender, msg)
         else:
             logging.debug("Delivered #%s from %s" % (message, sender))
             self.database.insert(message)
