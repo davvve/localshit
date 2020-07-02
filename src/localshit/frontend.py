@@ -80,12 +80,10 @@ class FrontendServer:
                         self.send_header("Content-Type", "application/json")
                         self.end_headers()
                         self.wfile.write(json_str.encode(encoding="utf_8"))
-                    elif self.path.endswith(
-                        ".png"
-                    ) or self.path.endswith(
-                        ".html"
-                    ) or self.path.endswith(
-                        ".ico"
+                    elif (
+                        self.path.endswith(".png")
+                        or self.path.endswith(".html")
+                        or self.path.endswith(".ico")
                     ):  # returns html files, for example the index.php
                         f = open(curdir + sep + self.path, "rb")
                         self.send_response(200)

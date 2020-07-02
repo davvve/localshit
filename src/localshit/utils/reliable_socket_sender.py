@@ -45,12 +45,7 @@ class ReliableSocketWorker:
         self.sock.settimeout(0.01)
 
     def unicast_send(
-        self,
-        destination,
-        message,
-        msg_id=None,
-        is_ack=False,
-        timestamp=None,
+        self, destination, message, msg_id=None, is_ack=False, timestamp=None,
     ):
         """ Push an outgoing message to the message queue. """
         if timestamp is None:
@@ -62,13 +57,7 @@ class ReliableSocketWorker:
 
         # pack message with utils, make vector timestamp
         message = self.pack_message(
-            [
-                self.my_id,
-                msg_id,
-                is_ack,
-                json.dumps(timestamp),
-                message,
-            ]
+            [self.my_id, msg_id, is_ack, json.dumps(timestamp), message]
         )
 
         # append every new message excluding ack msg or without id to unack_messages. they will be removed as soon as message was acknowledged
@@ -88,13 +77,9 @@ class ReliableSocketWorker:
             Returns True if new message was received. """
 
         data, _ = self.sock.recvfrom(self.message_max_size)
-        [
-            sender,
-            message_id,
-            is_ack,
-            message_timestamp,
-            message,
-        ] = self.unpack_message(data)
+        [sender, message_id, is_ack, message_timestamp, message] = self.unpack_message(
+            data
+        )
 
         logging.debug("Received #%s from %s" % (message_id, sender))
 
@@ -167,13 +152,7 @@ class ReliableSocketWorker:
 
     def unpack_message(self, message):
         message = message.decode("utf-8")
-        (
-            sender,
-            message_id,
-            is_ack,
-            vector_str,
-            message,
-        ) = message.split(";", 4)
+        (sender, message_id, is_ack, vector_str, message,) = message.split(";", 4)
 
         message_id = int(message_id)
         timestamp = json.loads(vector_str)

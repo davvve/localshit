@@ -26,7 +26,7 @@ class ContentProvider(StoppableThread):
         logging.debug("Starting ContentProvider")
 
         data = "%s:%s" % ("AA", self.election.current_member_ip)
-                        
+
         # 1. replicate with other backend servers and itself to store quote to database
         try:
             self.reliable_socket.multicast(data)
@@ -51,7 +51,7 @@ class ContentProvider(StoppableThread):
                         logging.info("Content: publish new quote")
                         id, quote = self.get_quote("jokes.json")
                         data = "%s:%s:%s" % ("CO", id, quote)
-                        
+
                         # 1. replicate with other backend servers and itself to store quote to database
                         try:
                             self.reliable_socket.multicast(data)
@@ -127,7 +127,6 @@ class ContentProvider(StoppableThread):
             except Exception as e:
                 logging.error("Content: Error while sending quote: %s" % e)
                 return
-
 
     def multicast_delivered(self, sender, message):
         parts = message.split(":")
