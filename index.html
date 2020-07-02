@@ -47,7 +47,6 @@
             message = e.data.split(":")
             if (message[0] == "CO") {
               output(message[1], message[2]);
-              // console.log("Got message from " + leader_json.leader + " " + counter);
               counter++;
             } else if (message[0] == "CL") {
               console.log("close connection")
@@ -61,7 +60,6 @@
           ws.onclose = function() {
             if (isConnected) {
               isConnected = false
-              output("no connection. retry...");
               console.log("no host. search for new host...");
             }
             console.log("onclose");
@@ -96,7 +94,8 @@
           + '</div>'
         + '</div>'
         + "</div>"
-      document.getElementById("log").appendChild(node.firstChild);
+      // document.getElementById("log").appendChild(node.firstChild);
+      document.getElementById("log").insertBefore(node.firstChild, document.getElementById("log").childNodes[0]);
     }
 
     function comment(id, str) {
@@ -145,14 +144,7 @@
           <button type="submit" class="btn btn-primary btn-block" id="new_quote_btn" onClick="send_quote()">Send</button>
         </div>
       </div>
-      <!--form class="form-inline" onsubmit="onSubmit(); return false;">
-        <div class="form-group mx-sm-3">
-          <input type="text" class="form-control" id="input">
-        </div>   
-        <input type="submit" class="btn btn-primary" value="Send">
-      </form-->
       <div id="log"></div>
-
     </div>
 
   </main>
