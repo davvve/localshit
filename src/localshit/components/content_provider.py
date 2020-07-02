@@ -134,7 +134,7 @@ class ContentProvider(StoppableThread):
         if parts[0] == "AA":
             data_set = self.database.get_range(start=-20)
             for msg in data_set:
-                self.reliable_socket.multicast(message)
+                self.reliable_socket.multicast(msg)
         else:
             logging.debug("Delivered #%s from %s" % (message, sender))
             self.database.insert(message)
