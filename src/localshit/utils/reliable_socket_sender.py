@@ -103,6 +103,13 @@ class ReliableSocketWorker:
             logging.debug("Added timestamp")
             self.my_timestamp[sender] = message_timestamp[sender]
 
+        # check if hosts in hold-back queue are up-to-date with ring
+        new_timestamp = {}
+        for host in self.my_timestamp:
+            if host in self.hosts.members:
+                new_timestamp[host] = self.my_timestamp[host]
+        self.my_timestamp = new_timestamp
+
         # check if ack message type
         if is_ack:
             # save that ack was send
