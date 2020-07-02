@@ -29,7 +29,6 @@ class ReliableSocketWorker:
         self.unack_messages = []  # messages with pending acknowledgement
         self.holdback_queue = []
 
-        self.holdback_queue_markers = []
         self.holdback_sequence_counter = 0
         self.sequence_counter = 0
         self.SEQUENCER_ID = 0
@@ -51,7 +50,6 @@ class ReliableSocketWorker:
         message,
         msg_id=None,
         is_ack=False,
-        is_order_marker=False,
         timestamp=None,
     ):
         """ Push an outgoing message to the message queue. """
@@ -68,7 +66,6 @@ class ReliableSocketWorker:
                 self.my_id,
                 msg_id,
                 is_ack,
-                is_order_marker,
                 json.dumps(timestamp),
                 message,
             ]
@@ -95,7 +92,6 @@ class ReliableSocketWorker:
             sender,
             message_id,
             is_ack,
-            is_order_marker,
             message_timestamp,
             message,
         ] = self.unpack_message(data)
@@ -152,11 +148,11 @@ class ReliableSocketWorker:
             if not removed_messages:
                 break
 
-    def multicast(self, message, is_order_marker=False):
+    def multicast(self, message):
         """ Unicast the message to all known clients. """
         # immitate multicast as for loop with unicasts. only on this way we get reliable multicast
         for destination in self.hosts.members:
-            self.unicast_send(destination, message, is_order_marker=is_order_marker)
+            self.unicast_send(destination, message)
         self.message_id_counter += 1
 
     def pack_message(self, message_list):
@@ -168,17 +164,15 @@ class ReliableSocketWorker:
             sender,
             message_id,
             is_ack,
-            is_order_marker,
             vector_str,
             message,
-        ) = message.split(";", 5)
+        ) = message.split(";", 4)
 
         message_id = int(message_id)
         timestamp = json.loads(vector_str)
         is_ack = is_ack in ["True", "true", "1"]
-        is_order_marker = is_order_marker in ["True", "true", "1"]
 
-        return [sender, message_id, is_ack, is_order_marker, timestamp, message]
+        return [sender, message_id, is_ack, timestamp, message]
 
     def ip2int(self, addr):
         return struct.unpack("!I", socket.inet_aton(addr))[0]
@@ -210,7 +204,6 @@ class ReliableSocketWorker:
                         _,
                         message_id,
                         is_ack,
-                        is_order_marker,
                         message_timestamp,
                         message,
                     ] = self.unpack_message(packed_message)
