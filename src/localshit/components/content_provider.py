@@ -15,6 +15,7 @@ class ContentProvider(StoppableThread):
         self.server.set_fn_new_client(self.new_client)
         self.server.set_fn_client_left(self.client_left)
         self.server.set_fn_message_received(self.message_received)
+        self.quote_id = 0
 
         # need reliable_socket for data replication
         self.reliable_socket = reliable_socket
@@ -35,8 +36,8 @@ class ContentProvider(StoppableThread):
                 time_diff = time.time() - self.last_update
                 if time_diff >= 3:
                     logging.info("Content: publish new quote")
-                    quote = self.get_quote("jokes.json")
-                    data = "%s:%s" % ("CO", quote)
+                    id, quote = self.get_quote("jokes.json")
+                    data = "%s:%s:%s" % ("CO", id, quote)
                     try:
                         self.server.send_message_to_all(data)
                     except Exception as e:
@@ -54,6 +55,7 @@ class ContentProvider(StoppableThread):
 
     def get_quote(self, filename):
         quote = None
+        quote_id = None
 
         try:
             file = open(filename)
@@ -63,10 +65,12 @@ class ContentProvider(StoppableThread):
             rand = random.randint(0, counts - 1)
             quote = quotes[rand]
             quote = quote["joke"]
+            quote_id = self.quote_id
+            self.quote_id += 1
         except Exception as e:
-            logging.error("Content: Error while starting app: %s" % e)
+            logging.error("Content: Error while generating quote: %s" % e)
 
-        return quote
+        return (quote_id, quote)
 
     # Called for every client connecting (after handshake)
     def new_client(self, client, server):
