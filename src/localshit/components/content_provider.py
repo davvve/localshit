@@ -36,25 +36,27 @@ class ContentProvider(StoppableThread):
                 except Exception as e:
                     logging.error("Error while restarting server: %s" % e)
             else:
-                time_diff = time.time() - self.last_update
-                if time_diff >= 3:
-                    logging.info("Content: publish new quote")
-                    id, quote = self.get_quote("jokes.json")
-                    data = "%s:%s:%s" % ("CO", id, quote)
-                    # 1. Send message to client
-                    try:
-                        self.server.send_message_to_all(data)
-                    except Exception as e:
-                        logging.error("Content: Error while sending quote: %s" % e)
-                        return
-                    # 2. replicate with other backend servers and itself to store quote to database
-                    try:
-                        self.reliable_socket.multicast(data)
-                    except Exception as e:
-                        logging.error("Content: Error while saving quote: %s" % e)
-                        return
+                if config["chuck_norris"] is True:
+                    time_diff = time.time() - self.last_update
+                    if time_diff >= config["quote_intervall"]:
+                        logging.info("Content: publish new quote")
+                        id, quote = self.get_quote("jokes.json")
+                        data = "%s:%s:%s" % ("CO", id, quote)
+                        # 1. Send message to client
+                        try:
+                            self.server.send_message_to_all(data)
+                        except Exception as e:
+                            logging.error("Content: Error while sending quote: %s" % e)
+                            return
+                        # 2. replicate with other backend servers and itself to store quote to database
+                        try:
+                            self.reliable_socket.multicast(data)
+                        except Exception as e:
+                            logging.error("Content: Error while saving quote: %s" % e)
+                            return
 
-                    self.last_update = time.time()
+                        self.last_update = time.time()
+
         else:
             if self.server.isRunning is True:
                 self.server.isRunning = False
