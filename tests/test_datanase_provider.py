@@ -74,6 +74,21 @@ class TestDatabaseProvider(unittest.TestCase):
         self.assertEqual(ranges[0], message_3)
         self.assertEqual(ranges[1], message_4)
 
+    def test_range_start(self):
+        database = Database()
+
+        message_1 = "CO:12:Hello"
+        message_2 = "CO:13:Hey"
+        message_3 = "CO:14:Hi"
+        message_4 = "CO:15:Holla"
+        database.insert(message_1)
+        database.insert(message_2)
+        database.insert(message_3)
+        database.insert(message_4)
+
+        ranges = database.get_range(start=-10)
+        self.assertEqual(len(ranges), 4)
+
     def test_delete(self):
         database = Database()
 

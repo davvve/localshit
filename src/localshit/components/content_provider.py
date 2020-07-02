@@ -25,6 +25,15 @@ class ContentProvider(StoppableThread):
 
         logging.debug("Starting ContentProvider")
 
+        data = "%s:%s" % ("AA", id, self.election.current_member_ip)
+                        
+        # 1. replicate with other backend servers and itself to store quote to database
+        try:
+            self.reliable_socket.multicast(data)
+        except Exception as e:
+            logging.error("Content: Error while saving quote: %s" % e)
+            return
+
         self.last_update = time.time()
 
     def work_func(self):
@@ -121,5 +130,11 @@ class ContentProvider(StoppableThread):
 
 
     def multicast_delivered(self, sender, message):
-        logging.debug("Delivered #%s from %s" % (message, sender))
-        self.database.insert(message)
+        parts = message.split(":")
+        if parts[0] == "AA":
+            data_set = self.database.get_range(start=-20)
+            for msg in data_set:
+                self.reliable_socket.multicast(data)
+        else:
+            logging.debug("Delivered #%s from %s" % (message, sender))
+            self.database.insert(message)
