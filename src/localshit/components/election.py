@@ -104,6 +104,7 @@ class Election:
                     "Leader Election: Message came back to sender. Election is over. Elected Leader: %s"
                     % self.elected_leader
                 )
+                self.send_election_to_frontend()
             elif self.participant is True:
                 # elected message received. mark as non-participant, record election and forward message
                 self.participant = False
