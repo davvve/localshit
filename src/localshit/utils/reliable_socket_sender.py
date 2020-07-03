@@ -69,8 +69,7 @@ class ReliableSocketWorker:
         dest_port = self.port
         send_time = time.time()
         # put to queue, which sends the messages out
-        self.queue.put((send_time, message, dest_ip, dest_port))
-        logging.debug("Add #%s for %s to queue" % (msg_id, dest_ip))
+        self.queue.put((send_time, message, dest_ip, dest_port, msg_id))
 
     def unicast_receive(self):
         """ Receive UDP messages from other chat processes and store them in the holdback queue.
@@ -85,7 +84,6 @@ class ReliableSocketWorker:
 
         # add sender to timestamps if not yet
         if sender not in self.my_timestamp:
-            logging.debug("Added timestamp")
             self.my_timestamp[sender] = message_timestamp[sender]
 
         # check if hosts in hold-back queue are up-to-date with ring
@@ -170,12 +168,12 @@ class ReliableSocketWorker:
         """ Thread that actually sends out messages when send time <= current_time. """
         # TODO: if we have removed randomness in sending messages, can we simplify this?
         while running:
-            (send_time, message, ip, port) = self.queue.get(block=True)
+            (send_time, message, ip, port, msg_id) = self.queue.get(block=True)
             if send_time <= time.time():
-                logging.debug("Send #%s to %s" % (message, ip))
+                logging.debug("Send #%s to %s" % (msg_id, ip))
                 self.sock.sendto(message, (ip, port))
             else:
-                self.queue.put((send_time, message, ip, port))
+                self.queue.put((send_time, message, ip, port, msg_id))
                 time.sleep(0.01)
 
     def ack_handler(self, running):

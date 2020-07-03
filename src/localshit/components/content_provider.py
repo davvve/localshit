@@ -25,20 +25,15 @@ class ContentProvider(StoppableThread):
 
         logging.debug("Starting ContentProvider")
 
-        data = "%s:%s" % ("AA", self.election.current_member_ip)
-
-        # 1. replicate with other backend servers and itself to store quote to database
-        try:
-            self.reliable_socket.multicast(data)
-        except Exception as e:
-            logging.error("Content: Error while saving quote: %s" % e)
-            return
+        self._ask_for_initial_database()
 
         self.last_update = time.time()
 
     def work_func(self):
         if self.election.isLeader:
+            # only run content service if elected as leader
             if self.server.isRunning is False:
+                # check if WebsocketServer is running
                 try:
                     self.server.run_forever()
                     self.server.isRunning = True
@@ -46,24 +41,13 @@ class ContentProvider(StoppableThread):
                     logging.error("Error while restarting server: %s" % e)
             else:
                 if config["chuck_norris"] is True:
+                    # optionally publish chuck norris quotes in a intervall
                     time_diff = time.time() - self.last_update
                     if time_diff >= config["quote_intervall"]:
                         logging.info("Content: publish new quote")
-                        id, quote = self.get_quote("jokes.json")
+                        id, quote = self._get_quote("jokes.json")
                         data = "%s:%s:%s" % ("CO", id, quote)
-
-                        # 1. replicate with other backend servers and itself to store quote to database
-                        try:
-                            self.reliable_socket.multicast(data)
-                        except Exception as e:
-                            logging.error("Content: Error while saving quote: %s" % e)
-                            return
-                        # 2. Send message to client
-                        try:
-                            self.server.send_message_to_all(data)
-                        except Exception as e:
-                            logging.error("Content: Error while sending quote: %s" % e)
-                            return
+                        self._replicate_and_send(data)
 
                         self.last_update = time.time()
 
@@ -76,7 +60,7 @@ class ContentProvider(StoppableThread):
                 self.server.server_close()
                 logging.info("Content: publish service stopped")
 
-    def get_quote(self, filename):
+    def _get_quote(self, filename):
         quote = None
         quote_id = None
 
@@ -94,46 +78,56 @@ class ContentProvider(StoppableThread):
 
         return (quote_id, quote)
 
-    # Called for every client connecting (after handshake)
     def new_client(self, client, server):
-        print("Content: New client connected and was given id %d" % client["id"])
-        # TODO: send last 10 updates to client
+        """Callback function of WebsocketServer on new client connected"""
+        logging.info("Content: New client connected and was given id %d" % client["id"])
 
-    # Called for every client disconnecting
     def client_left(self, client, server):
-        print("Content: Client(%d) disconnected" % client["id"])
+        """Callback function of WebsocketServer on client left"""
+        logging.info("Content: Client(%d) disconnected" % client["id"])
 
-    # Called when a client sends a message
     def message_received(self, client, server, message):
-        logging.info("Content: Client(%d) said: %s" % (client["id"], message))
+        """Callback function of WebsocketServer on message received from client"""
+        logging.info("Content: Message from client %d: %s" % (client["id"], message))
 
         parts = message.split(":")
         if parts[0] == "CR":
-            parts[2] = "%s - %s" % (client["id"], parts[2])
             new_message = "%s:%s:%s" % (parts[0], parts[1], parts[2])
             self.server.send_message_to_all(new_message)
         elif parts[0] == "CO":
             quote_id = uuid.uuid4()
             data = "%s:%s:%s" % ("CO", quote_id, parts[1])
-            # 1. replicate with other backend servers and itself to store quote to database
-            try:
-                self.reliable_socket.multicast(data)
-            except Exception as e:
-                logging.error("Content: Error while saving quote: %s" % e)
-                return
-            # 2. Send message to client
-            try:
-                self.server.send_message_to_all(data)
-            except Exception as e:
-                logging.error("Content: Error while sending quote: %s" % e)
-                return
+            self._replicate_and_send(data)
 
     def multicast_delivered(self, sender, message):
+        """Callback function of ReliableSocketWorker on new message delivered"""
         parts = message.split(":")
         if parts[0] == "AA" and self.election.isLeader:
             data_set = self.database.get_range(start=-20)
             for msg in data_set:
                 self.reliable_socket.unicast_send(sender, msg)
         else:
-            logging.debug("Delivered #%s from %s" % (message, sender))
+            logging.debug('Delivered "%s" from %s' % (message[:15], sender))
             self.database.insert(message)
+
+    def _replicate_and_send(self, data):
+        # 1. replicate with other backend servers and itself to store quote to database
+        try:
+            self.reliable_socket.multicast(data)
+        except Exception as e:
+            logging.error("Content: Error while saving quote: %s" % e)
+            return
+        # 2. Send message to client
+        try:
+            self.server.send_message_to_all(data)
+        except Exception as e:
+            logging.error("Content: Error while sending quote: %s" % e)
+            return
+
+    def _ask_for_initial_database(self):
+        data = "%s:%s" % ("AA", self.election.current_member_ip)
+        try:
+            self.reliable_socket.multicast(data)
+        except Exception as e:
+            logging.error("Content: Error while saving quote: %s" % e)
+            return

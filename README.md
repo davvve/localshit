@@ -96,6 +96,11 @@ Run docker
 docker run --rm localshit-frontend
 ```
 
+## Run tests
+```
+pytest tests -s
+```
+
 # Details about the system
 
 ## Message Types
@@ -111,6 +116,7 @@ docker run --rm localshit-frontend
 | CO | content | - | Content messages - send to clients |
 | CL | message | - | Notify clients that websocket of backend server is shutting down |
 | CR | comment | - | Message type for comments on quotes from the client |
+| AA | IP address | - | Send initial message via multicast to get a database update |
 
 # Vagrant
 
