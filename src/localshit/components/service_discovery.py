@@ -80,5 +80,5 @@ class ServiceDiscovery(StoppableThread):
                 self.heartbeat.send_heartbeat()
 
         # watch heartbeats
-        th = threading.Thread(target=self.watch_heartbeat)
+        th = threading.Thread(target=self.heartbeat.watch_heartbeat)
         th.start()
