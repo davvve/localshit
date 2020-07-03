@@ -9,6 +9,7 @@ from select import select
 from localshit.utils.stop import StoppableThread
 from localshit.utils import utils
 import time
+import threading
 from localshit.utils import config
 from localshit.utils.utils import logging
 
@@ -78,5 +79,6 @@ class ServiceDiscovery(StoppableThread):
             if self.election.isLeader is True:
                 self.heartbeat.send_heartbeat()
 
-            # watch heartbeats
-            self.heartbeat.watch_heartbeat()
+        # watch heartbeats
+        th = threading.Thread(target=self.watch_heartbeat)
+        th.start()
