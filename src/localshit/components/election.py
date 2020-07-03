@@ -123,3 +123,5 @@ class Election:
                     "Leader Election: Election is over. Elected Leader: %s"
                     % self.elected_leader
                 )
+                self.send_election_to_frontend()
+                
